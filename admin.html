@@ -680,7 +680,7 @@ function base64Encode(str) {
   return btoa(unescape(encodeURIComponent(str)));
 }
 
-// ══ Save to GitHub ═══════════════════════════════════════
+// ══ Save to GitHub (带 SHA 重试) ══════════════════════════
 async function saveToGitHub(filename, data, showToastMsg = true) {
   const token = getToken();
   if (!token) {
@@ -693,32 +693,27 @@ async function saveToGitHub(filename, data, showToastMsg = true) {
   const content = JSON.stringify(data, null, 2);
   const encoded = base64Encode(content);
 
-  try {
-    /* 1. 获取当前文件的 sha */
-    const getResp = await fetch(
+  /* 内部函数：获取最新 SHA */
+  const fetchSha = async () => {
+    const r = await fetch(
       `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}`,
       { headers: { Authorization: `token ${token}` } }
     );
-    let sha;
-    if (getResp.ok) {
-      const getData = await getResp.json();
-      sha = getData.sha;
-    } else if (getResp.status === 404) {
-      /* 文件不存在，新建 */
-      sha = undefined;
-    } else {
-      throw new Error(`获取文件失败：${getResp.status}`);
-    }
+    if (r.ok) { return (await r.json()).sha; }
+    if (r.status === 404) { return null; }   // 新文件
+    throw new Error(`获取文件 SHA 失败：${r.status}`);
+  };
 
-    /* 2. 提交文件 */
-    const putBody = {
+  /* 内部函数：提交文件（最多重试 2 次） */
+  const doPut = async (sha, attempt) => {
+    const body = {
       message: `Update ${filename} via admin panel`,
       content: encoded,
       branch: GH_BRANCH,
     };
-    if (sha) putBody.sha = sha;
+    if (sha) body.sha = sha;
 
-    const putResp = await fetch(
+    const r = await fetch(
       `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`,
       {
         method: 'PUT',
@@ -726,15 +721,25 @@ async function saveToGitHub(filename, data, showToastMsg = true) {
           Authorization: `token ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(putBody),
+        body: JSON.stringify(body),
       }
     );
 
-    if (!putResp.ok) {
-      const err = await putResp.json();
-      throw new Error(err.message || `提交失败：${putResp.status}`);
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({ message: `HTTP ${r.status}` }));
+      /* SHA 不匹配 → 重试一次（重新获取最新 SHA） */
+      if (err.message && err.message.includes('does not match') && attempt < 2) {
+        const freshSha = await fetchSha();
+        return doPut(freshSha, attempt + 1);
+      }
+      throw new Error(err.message || `提交失败：${r.status}`);
     }
+    return true;
+  };
 
+  try {
+    const sha = await fetchSha();
+    await doPut(sha, 1);
     if (showToastMsg) showToast(`✅ ${filename} 已保存到 GitHub，稍等片刻前台将自动更新`);
     return true;
   } catch (e) {
