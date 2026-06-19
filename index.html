@@ -1193,6 +1193,15 @@
         else                   { stopVizBars();  }
       });
 
+      /* ── 自动下一首（仅 Hero 源，监听共享 Audio 的 ended）── */
+      sp.audio.addEventListener('ended', () => {
+        if (sp.source === 'hero') {
+          const idx = pickRandom();
+          loadTrack(idx);
+          sp.play(TRACKS[idx], 'hero');
+        }
+      });
+
       /* ── 加载曲目（仅设置 currentIdx，不创建 Audio）── */
       const loadTrack = idx => {
         if (idx < 0 || idx >= TRACKS.length) return;
