@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "title": "Midnight Masquerade",
+    "desc": "AI音乐编曲 / 作词 / 制作人作品",
+    "file": "Midnight_Masquerade.wav",
+    "cover": ""
+  },
+  {
+    "id": 2,
+    "title": "Chilling",
+    "desc": "AI音乐编曲 / 作词 / 制作人作品",
+    "file": "Chilling.wav",
+    "cover": ""
+  }
+]

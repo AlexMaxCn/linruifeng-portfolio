@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>林锐锋 | 录音技术与声音制作</title>
+  <style>
+    :root {
+      --ink: #16202a;
+      --muted: #64717f;
+      --line: #dce3e8;
+      --paper: #f6f8f9;
+      --panel: #ffffff;
+      --accent: #0d9488;
+      --accent-2: #f59e0b;
+      --accent-3: #315f72;
+      --dark: #101820;
+      --shadow: 0 18px 48px rgba(17, 28, 39, 0.11);
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", Arial, sans-serif;
+      line-height: 1.65;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* ── Nav ── */
+    .site-nav {
+      position: sticky; top: 0; z-index: 20;
+      border-bottom: 1px solid rgba(220,227,232,.86);
+      background: rgba(246,248,249,.92);
+      backdrop-filter: blur(16px);
+    }
+    .nav-inner {
+      max-width: 1120px; margin: 0 auto;
+      padding: 12px 24px;
+      display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; white-space: nowrap; }
+    .brand-mark {
+      width: 34px; height: 34px; display: grid; place-items: center;
+      color: #fff; background: var(--dark); border-radius: 8px; font-size: 15px;
+    }
+    .nav-links { display: flex; gap: 18px; color: var(--muted); font-size: 14px; white-space: nowrap; }
+    .nav-links a:hover { color: var(--accent); }
+
+    /* ── Hero ── */
+    .hero {
+      color: #fff;
+      background:
+        linear-gradient(90deg, rgba(16,24,32,.93), rgba(16,24,32,.72) 48%, rgba(16,24,32,.28)),
+        radial-gradient(circle at 84% 36%, rgba(245,158,11,.34), transparent 26%),
+        linear-gradient(135deg, #101820 0%, #315f72 56%, #0d9488 100%);
+      overflow: hidden;
+    }
+    .hero-inner {
+      max-width: 1120px; min-height: calc(100vh - 60px);
+      margin: 0 auto; padding: 76px 24px 54px;
+      display: grid; grid-template-columns: minmax(0,1.02fr) minmax(300px,.78fr);
+      align-items: center; gap: 52px;
+    }
+    .eyebrow { margin: 0 0 14px; color: #9ee8df; font-size: 15px; font-weight: 700; }
+    h1 { margin: 0; font-size: clamp(44px,7vw,86px); line-height: .98; }
+    .hero-copy { max-width: 640px; margin: 24px 0 0; color: rgba(255,255,255,.82); font-size: 18px; }
+    .hero-actions { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 12px; }
+    .btn {
+      min-height: 44px; padding: 10px 17px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      border: 1px solid rgba(255,255,255,.24); border-radius: 8px;
+      color: #fff; font-weight: 700;
+      transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+    }
+    .btn:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.08); }
+    .btn.primary { border-color: #9ee8df; color: #06201d; background: #9ee8df; }
+    .hero .btn { border-color: #9ee8df; color: #06201d; background: #9ee8df; }
+    .sound-visual { min-height: 410px; position: relative; display: grid; place-items: center; }
+    .console {
+      width: min(100%, 430px); padding: 22px;
+      border: 1px solid rgba(255,255,255,.2); border-radius: 8px;
+      background: rgba(255,255,255,.09); box-shadow: 0 30px 70px rgba(0,0,0,.28);
+      backdrop-filter: blur(18px);
+    }
+    .meters {
+      height: 170px; display: grid; grid-template-columns: repeat(20,1fr);
+      align-items: end; gap: 7px; padding: 18px; border-radius: 8px;
+      background: rgba(5,12,18,.48);
+    }
+    .meter {
+      min-height: 28px; border-radius: 999px 999px 2px 2px;
+      background: linear-gradient(180deg, #f6c85f 0%, #4bd3c4 48%, #1b8079 100%);
+      animation: pulse 1.7s ease-in-out infinite;
+      animation-delay: calc(var(--i) * -90ms);
+      transform-origin: bottom;
+    }
+    .console-row { margin-top: 18px; display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+    .knob {
+      aspect-ratio: 1; border-radius: 50%;
+      border: 8px solid rgba(255,255,255,.18);
+      background: conic-gradient(from 30deg, #f59e0b 0 30%, #9ee8df 30% 62%, rgba(255,255,255,.16) 62% 100%);
+    }
+    .hero-stats { margin-top: 24px; display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+    .stat { padding: 13px; border: 1px solid rgba(255,255,255,.18); border-radius: 8px; background: rgba(255,255,255,.07); }
+    .stat strong { display: block; font-size: 22px; line-height: 1.1; }
+    .stat span { color: rgba(255,255,255,.7); font-size: 12px; }
+    @keyframes pulse { 0%,100%{transform:scaleY(.55)} 50%{transform:scaleY(1)} }
+
+    /* ── Sections ── */
+    section { max-width: 1120px; margin: 0 auto; padding: 74px 24px; }
+    #about { padding-top: 44px; padding-bottom: 28px; }
+    .section-head { max-width: 720px; margin-bottom: 30px; }
+    #about .section-head { margin-bottom: 18px; }
+    .section-kicker { margin: 0 0 8px; color: var(--accent); font-weight: 800; font-size: 14px; }
+    h2 { margin: 0; font-size: clamp(28px,4vw,44px); line-height: 1.15; }
+    .section-lead { margin: 14px 0 0; color: var(--muted); font-size: 17px; }
+
+    /* ── About ── */
+    .about-grid { display: grid; grid-template-columns: .9fr 1.1fr; gap: 28px; align-items: stretch; }
+    .profile-panel,.info-panel,.project-card,.skill-block,.timeline-item {
+      border: 1px solid var(--line); border-radius: var(--radius);
+      background: var(--panel); box-shadow: var(--shadow);
+    }
+    .profile-panel { padding: 24px; display: grid; align-content: space-between; gap: 20px; }
+    .profile-intro {
+      min-height: 150px; padding: 18px;
+      display: grid; grid-template-columns: 118px minmax(0,1fr);
+      align-items: center; gap: 20px;
+      border: 1px solid var(--line); border-radius: 8px;
+      background: linear-gradient(135deg,rgba(13,148,136,.08),rgba(49,95,114,.04)), #f9fbfb;
+    }
+    .portrait {
+      width: 118px; height: 118px; display: block;
+      object-fit: cover; object-position: center 28%;
+      border-radius: 8px; background: linear-gradient(145deg,rgba(13,148,136,.92),rgba(49,95,114,.95)),#315f72;
+    }
+    .profile-panel h3,.project-card h3,.skill-block h3,.timeline-item h3 { margin: 0; font-size: 22px; line-height: 1.25; }
+    .profile-panel p,.project-card p,.skill-block p,.timeline-item p { margin: 10px 0 0; color: var(--muted); }
+    .contact-list { display: grid; gap: 10px; font-size: 15px; }
+    .contact-list a,.contact-list span { padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: #f9fbfb; display: block; }
+    .info-panel { padding: 24px; }
+    .strengths { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; }
+    .strength { min-height: 118px; padding: 18px; border-left: 4px solid var(--accent); background: #f9fbfb; border-radius: 8px; }
+    .strength[data-color="accent-2"] { border-left-color: var(--accent-2); }
+    .strength[data-color="accent-3"] { border-left-color: var(--accent-3); }
+    .strength strong { display: block; margin-bottom: 8px; font-size: 17px; }
+    .strength span { color: var(--muted); font-size: 15px; }
+
+    /* ── Projects ── */
+    .project-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; }
+    .project-card { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+    .project-meta { display: flex; flex-wrap: wrap; gap: 8px; color: var(--muted); font-size: 14px; }
+    .tag { padding: 5px 9px; border: 1px solid var(--line); border-radius: 999px; background: #f9fbfb; }
+    .project-card ul,.timeline-item ul { margin: 0; padding-left: 20px; color: var(--muted); }
+    .highlight { color: var(--accent-3); font-weight: 800; background: linear-gradient(180deg,transparent 56%,rgba(158,232,223,.48) 56%); }
+    .project-card.featured { grid-column: span 2; display: grid; grid-template-columns: .82fr 1.18fr; gap: 24px; border-top: 5px solid var(--accent-2); }
+    .impact { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+    .impact div { padding: 14px; border-radius: 8px; background: linear-gradient(135deg,rgba(158,232,223,.34),rgba(255,255,255,.92)); border: 1px solid rgba(13,148,136,.22); }
+    .impact strong { display: block; color: var(--accent-3); font-size: 22px; }
+    .impact span { color: var(--muted); font-size: 13px; }
+
+    /* ── Skills ── */
+    .skills-wrap { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(4,1fr); gap: 18px; }
+    .skill-block { position: relative; padding: 24px; background: rgba(255,255,255,.88); backdrop-filter: blur(10px); }
+    #skills { position: relative; overflow: hidden; border-radius: 8px; }
+    #skills::before {
+      content: ""; position: absolute; inset: 46px 6px 22px; border-radius: 8px;
+      background: linear-gradient(135deg,rgba(13,148,136,.08),rgba(49,95,114,.05)),
+        radial-gradient(circle at 88% 18%,rgba(245,158,11,.12),transparent 28%);
+      pointer-events: none;
+    }
+    .software-wall {
+      position: absolute; inset: 88px 22px auto auto;
+      width: min(48%,520px); min-height: 230px;
+      display: grid; grid-template-columns: repeat(6,58px); grid-auto-rows: 58px;
+      gap: 12px; justify-content: end;
+      opacity: .28; transform: rotate(-4deg); pointer-events: none;
+    }
+    .software-wall span {
+      display: grid; place-items: center;
+      border: 1px solid rgba(49,95,114,.24); border-radius: 8px;
+      color: #17313b; background: rgba(255,255,255,.72);
+      box-shadow: 0 12px 26px rgba(17,28,39,.08);
+      font-size: 13px; font-weight: 900;
+    }
+    .software-wall span:nth-child(3n+1) { background: rgba(158,232,223,.72); }
+    .software-wall span:nth-child(3n+2) { background: rgba(246,200,95,.48); }
+    .software-wall span:nth-child(4n) { transform: translateY(20px); }
+    .skill-list { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 9px; }
+    .skill-list span { padding: 8px 10px; border-radius: 8px; color: #26343f; background: #eef4f5; font-size: 14px; }
+
+    /* ── Music ── */
+    .music-section { position: relative; overflow: hidden; border-radius: 8px; }
+    .music-section::before {
+      content: ""; position: absolute; inset: 40px 6px 24px; border-radius: 8px;
+      background: linear-gradient(135deg,rgba(16,24,32,.06),rgba(13,148,136,.08)),
+        radial-gradient(circle at 18% 82%,rgba(245,158,11,.16),transparent 28%);
+      pointer-events: none;
+    }
+    .music-grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
+    .track-card { padding: 24px; border: 1px solid var(--line); border-radius: 8px; background: rgba(255,255,255,.9); box-shadow: var(--shadow); backdrop-filter: blur(10px); }
+    .track-card h3 { margin: 0; font-size: 22px; line-height: 1.25; }
+    .track-card p { margin: 10px 0 18px; color: var(--muted); }
+    audio { width: 100%; min-height: 42px; }
+    .music-link {
+      position: relative; z-index: 1; margin-top: 18px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      padding: 18px 20px; border: 1px solid rgba(13,148,136,.2); border-radius: 8px;
+      background: rgba(255,255,255,.86); box-shadow: var(--shadow);
+    }
+    .music-link strong { display: block; font-size: 18px; }
+    .music-link span { color: var(--muted); font-size: 14px; }
+    .music-link .btn { border-color: rgba(13,148,136,.28); color: var(--accent-3); background: rgba(158,232,223,.38); white-space: nowrap; }
+
+    /* ── Education ── */
+    .timeline { display: grid; gap: 16px; }
+    .timeline-item { padding: 24px; display: grid; grid-template-columns: 190px 1fr; gap: 20px; }
+    .timeline-date { color: var(--accent); font-weight: 800; }
+
+    /* ── CTA ── */
+    .cta-band { max-width: none; padding: 0; color: #fff; background: var(--dark); }
+    .cta-inner {
+      max-width: 1120px; margin: 0 auto; padding: 54px 24px;
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    }
+    .cta-inner h2 { max-width: 620px; font-size: clamp(24px,2.6vw,34px); line-height: 1.18; }
+    .cta-inner p { max-width: 620px; margin: 12px 0 0; color: rgba(255,255,255,.72); }
+    .cta-band .hero-actions { gap: 10px; justify-content: flex-end; }
+    .cta-band .btn,.cta-band .btn.primary { border-color: rgba(158,232,223,.32); color: #d9fffb; background: rgba(255,255,255,.06); }
+    .cta-band .btn:hover,.cta-band .btn.primary:hover { border-color: rgba(158,232,223,.55); background: rgba(158,232,223,.12); }
+
+    footer { padding: 22px 24px; color: var(--muted); text-align: center; font-size: 14px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 860px) {
+      .nav-links { display: none; }
+      .hero-inner,.about-grid,.project-card.featured,.timeline-item { grid-template-columns: 1fr; }
+      .hero-inner { min-height: auto; padding-top: 54px; }
+      .sound-visual { min-height: 320px; }
+      .project-card.featured { grid-column: span 1; }
+      .project-grid,.strengths,.skills-wrap,.music-grid,.impact { grid-template-columns: 1fr; }
+      .software-wall { inset: 90px 16px auto auto; width: 74%; grid-template-columns: repeat(4,46px); grid-auto-rows: 46px; gap: 9px; opacity: .16; }
+      .software-wall span { font-size: 11px; }
+      .profile-intro { grid-template-columns: 96px minmax(0,1fr); }
+      .portrait { width: 96px; height: 96px; }
+      .cta-inner { align-items: flex-start; flex-direction: column; }
+      .music-link { align-items: flex-start; flex-direction: column; }
+    }
+    @media (max-width: 520px) {
+      .hero-actions { flex-direction: column; }
+      .btn { width: 100%; }
+      .hero-stats { grid-template-columns: 1fr; }
+      section { padding: 54px 18px; }
+      .nav-inner,.hero-inner,.cta-inner { padding-left: 18px; padding-right: 18px; }
+      .console { padding: 16px; }
+      .meters { gap: 4px; padding: 13px; }
+      .profile-intro { min-height: 0; grid-template-columns: 1fr; justify-items: center; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Nav -->
+  <nav class="site-nav" aria-label="主导航">
+    <div class="nav-inner">
+      <a class="brand" href="#top" aria-label="返回首页">
+        <span class="brand-mark">林</span>
+        <span>林锐锋</span>
+      </a>
+      <div class="nav-links">
+        <a href="#about">关于</a>
+        <a href="#projects">项目</a>
+        <a href="#skills">技能</a>
+        <a href="#music">作品</a>
+        <a href="#education">经历</a>
+        <a href="#contact">联系</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero" id="top">
+    <div class="hero-inner">
+      <div>
+        <p class="eyebrow">录音技术与艺术 · 现场扩声 · 后期混音</p>
+        <h1>林锐锋</h1>
+        <p class="hero-copy">广东艺术职业学院 录音技术与艺术专业。专注于现场扩声、录音棚运营与音乐后期制作，具备多个大型活动音响执行与音乐制作实战经验。</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="mailto:3221202923@qq.com">邮件联系</a>
+          <a class="btn" href="tel:19864292005">电话沟通</a>
+          <a class="btn" href="#projects">查看项目</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat"><strong>4+</strong><span>项目经历</span></div>
+          <div class="stat"><strong>500+</strong><span>活动观众</span></div>
+          <div class="stat"><strong>多项</strong><span>原创作品</span></div>
+        </div>
+      </div>
+      <div class="sound-visual" aria-hidden="true">
+        <div class="console">
+          <div class="meters">
+            <span class="meter" style="--i:1; height:62%"></span>
+            <span class="meter" style="--i:2; height:88%"></span>
+            <span class="meter" style="--i:3; height:48%"></span>
+            <span class="meter" style="--i:4; height:73%"></span>
+            <span class="meter" style="--i:5; height:95%"></span>
+            <span class="meter" style="--i:6; height:55%"></span>
+            <span class="meter" style="--i:7; height:82%"></span>
+            <span class="meter" style="--i:8; height:40%"></span>
+            <span class="meter" style="--i:9; height:76%"></span>
+            <span class="meter" style="--i:10; height:91%"></span>
+            <span class="meter" style="--i:11; height:58%"></span>
+            <span class="meter" style="--i:12; height:86%"></span>
+            <span class="meter" style="--i:13; height:66%"></span>
+            <span class="meter" style="--i:14; height:44%"></span>
+            <span class="meter" style="--i:15; height:78%"></span>
+            <span class="meter" style="--i:16; height:96%"></span>
+            <span class="meter" style="--i:17; height:52%"></span>
+            <span class="meter" style="--i:18; height:84%"></span>
+            <span class="meter" style="--i:19; height:60%"></span>
+            <span class="meter" style="--i:20; height:72%"></span>
+          </div>
+          <div class="console-row">
+            <span class="knob"></span><span class="knob"></span>
+            <span class="knob"></span><span class="knob"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- About -->
+    <section id="about">
+      <div class="section-head">
+        <p class="section-kicker">About</p>
+        <h2>关于我</h2>
+        <p class="section-lead">录音技术与艺术专业，热爱声音技术与音乐创作，善于在团队中担任技术执行与项目协调角色。</p>
+      </div>
+      <div class="about-grid">
+        <div class="profile-panel">
+          <div class="profile-intro">
+            <img class="portrait" src="证件照/d13cd8d20afc76ef32431b89d08d61c3.jpg" alt="林锐锋证件照">
+            <div>
+              <h3>林锐锋</h3>
+              <p>男 · 23岁 · 广东艺术职业学院</p>
+            </div>
+          </div>
+          <div class="contact-list">
+            <a href="tel:19864292005">电话：19864292005</a>
+            <a href="mailto:3221202923@qq.com">邮箱：3221202923@qq.com</a>
+            <span>方向：现场扩声 / 录音制作 / 音乐后期</span>
+          </div>
+        </div>
+        <div class="info-panel">
+          <div class="strengths">
+            <div class="strength">
+              <strong>现场扩声</strong>
+              <span>大型活动音响系统搭建、调音台操作、舞台监听配置</span>
+            </div>
+            <div class="strength" data-color="accent-2">
+              <strong>录音棚运营</strong>
+              <span>录音棚筹建规划、设备选型、声学环境评估</span>
+            </div>
+            <div class="strength" data-color="accent-3">
+              <strong>音乐后期</strong>
+              <span>混音制作、音频编辑、AI辅助音乐创作</span>
+            </div>
+            <div class="strength">
+              <strong>项目执行</strong>
+              <span>活动统筹、团队协调、商务谈判、成本控制</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Projects -->
+    <section id="projects">
+      <div class="section-head">
+        <p class="section-kicker">Projects</p>
+        <h2>项目经历</h2>
+        <p class="section-lead">从校园大型晚会到原创音乐录制，再到商业录音棚筹备，经历覆盖现场、棚内与项目管理三类场景。</p>
+      </div>
+      <div class="project-grid">
+        <!-- 重点项目：DreamMax录音棚 -->
+        <article class="project-card featured">
+          <div>
+            <div class="project-meta">
+              <span class="tag">录音棚筹建</span>
+              <span class="tag">项目统筹</span>
+              <span class="tag">商务谈判</span>
+              <span class="tag">2026年3月 - 5月</span>
+            </div>
+            <h3>DreamMax录音棚 · 创业筹备项目</h3>
+            <p>独立完成录音棚项目从0到1的完整策划，涵盖市场调研、场地选址、设备选型、财务测算、法律合规、商务谈判等全部环节。</p>
+          </div>
+          <div>
+            <div class="impact">
+              <div><strong>15%</strong><span>预算优化</span></div>
+              <div><strong>三轮</strong><span>商务谈判</span></div>
+              <div><strong>全流程</strong><span>0到1筹备</span></div>
+            </div>
+            <ul>
+              <li>独立完成项目<strong class="highlight">从0到1完整策划</strong>，涵盖市场调研、场地选址、设备选型、财务测算、法律合规等全部环节</li>
+              <li>主导与园区开发商（<strong class="highlight">佛山文旅、珠海影视城等</strong>）三轮面对面谈判，推动整体预算下调15%</li>
+              <li>负责<strong class="highlight">供应商全流程对接</strong>：筛选产品商、跟进样品确认与测试、协调交付进度</li>
+              <li>独立完成全部前期筹备工作，项目因外部资金和合伙人分歧暂停，<strong class="highlight">无遗留纠纷</strong></li>
+            </ul>
+          </article>
+
+        <!-- 其他项目 -->
+        <article class="project-card">
+          <div class="project-meta">
+            <span class="tag">现场扩声</span>
+            <span class="tag">活动执行</span>
+            <span class="tag">2025年1月</span>
+          </div>
+          <h3>2025艺术科技学院迎新晚会</h3>
+          <ul>
+            <li>担任<strong class="highlight">FOH调音助理</strong>，协助完成多轨录音，保障约500名观众的听觉体验</li>
+            <li>负责<strong class="highlight">舞台监听系统</strong>搭建与演出期间监听混音，获在场导师导演一致认可</li>
+          </ul>
+        </article>
+
+        <article class="project-card">
+          <div class="project-meta">
+            <span class="tag">现场扩声</span>
+            <span class="tag">活动执行</span>
+            <span class="tag">2024年1月</span>
+          </div>
+          <h3>"音"你而来·2024级迎新晚会</h3>
+          <ul>
+            <li>负责<strong class="highlight">现场乐队拾音</strong>与舞台返送系统调试，使用X32数字调音台完成多轨录音</li>
+            <li>保障约<strong class="highlight">580名观众</strong>的听觉体验，获导师、导演组技术认可</li>
+          </ul>
+        </article>
+
+        <article class="project-card">
+          <div class="project-meta">
+            <span class="tag">音乐制作</span>
+            <span class="tag">录音/混音</span>
+            <span class="tag">2025年8月</span>
+          </div>
+          <h3>国家"三下乡"主题曲《征途》</h3>
+          <ul>
+            <li>参与<strong class="highlight">歌手录音及后期混音</strong>，协助完成多轨合唱声像平衡与混响处理</li>
+            <li>使用<strong class="highlight">DAW为Cubase</strong>，作品获<strong class="highlight">广东省高校原创音乐三等奖</strong></li>
+            <li>同时担任2025年"<strong class="highlight">靖益舍</strong>"社会实践队队员，参与团队主题曲录制及现场执行</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <!-- Skills -->
+    <section id="skills">
+      <div class="software-wall" aria-hidden="true">
+        <span>Cb</span><span>PT</span><span>Lg</span><span>X32</span>
+        <span>Pr</span><span>FCP</span><span>DR</span><span>Fu</span>
+        <span>Ps</span><span>Ai</span><span>CAD</span><span>Lr</span>
+      </div>
+      <div class="section-head">
+        <p class="section-kicker">Skills</p>
+        <h2>工具与专业能力</h2>
+      </div>
+      <div class="skills-wrap">
+        <div class="skill-block">
+          <h3>音频制作</h3>
+          <p>录音、混音、编曲</p>
+          <div class="skill-list">
+            <span>Logic Pro</span>
+            <span>Pro Tools</span>
+            <span>Cubase</span>
+            <span>Studio One</span>
+          </div>
+        </div>
+        <div class="skill-block">
+          <h3>现场扩声</h3>
+          <p>数字调音台与信号处理</p>
+          <div class="skill-list">
+            <span>Behringer X32</span>
+            <span>Midas M32</span>
+            <span>Dante 网络</span>
+            <span>SIEM 监听</span>
+          </div>
+        </div>
+        <div class="skill-block">
+          <h3>视频编辑</h3>
+          <p>剪辑、调色与特效</p>
+          <div class="skill-list">
+            <span>Premiere Pro</span>
+            <span>Final Cut Pro</span>
+            <span>DaVinci Resolve</span>
+            <span>Fusion</span>
+            <span>剪映 Pro</span>
+          </div>
+        </div>
+        <div class="skill-block">
+          <h3>图像与设计</h3>
+          <p>修图、排版与CAD绘图</p>
+          <div class="skill-list">
+            <span>Photoshop</span>
+            <span>Illustrator</span>
+            <span>CorelDRAW</span>
+            <span>Auto CAD</span>
+            <span>Lightroom</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Music -->
+    <section class="music-section" id="music">
+      <div class="section-head">
+        <p class="section-kicker">Music</p>
+        <h2>原创音乐作品</h2>
+        <p class="section-lead">使用专业 DAW 与 AI 辅助创作结合，作品发布于网易云音乐。</p>
+      </div>
+      <div class="music-grid">
+        <article class="track-card">
+          <h3>Midnight Masquerade</h3>
+          <p>电子音乐 · 编曲 / 混音</p>
+          <audio controls preload="metadata" src="Midnight_Masquerade.wav"></audio>
+        </article>
+        <article class="track-card">
+          <h3>Chilling</h3>
+          <p>AI辅助创作 · 编曲 / 混音</p>
+          <audio controls preload="metadata" src="Chilling.wav"></audio>
+        </article>
+      </div>
+      <div class="music-link">
+        <div><strong>网易云音乐人主页</strong><span>更多作品与音乐人资料可在网易云主页查看。</span></div>
+        <a class="btn" href="https://music.163.com/creator/space?followId=514557726" target="_blank" rel="noopener">访问主页</a>
+      </div>
+    </section>
+
+    <!-- Education -->
+    <section id="education">
+      <div class="section-head">
+        <p class="section-kicker">Education</p>
+        <h2>教育经历</h2>
+      </div>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-date">2023年9月 - 2026年6月（预计）</div>
+          <div>
+            <h3>广东艺术职业学院 · 大专 · 录音技术与艺术</h3>
+            <p>主修录音技术与艺术，课程涵盖现场扩声、音乐后期制作、声学基础、电子音乐创作等方向。具备扎实的理论基础以及成熟的实操能力。</p>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-date">2021年9月 - 2022年6月</div>
+          <div>
+            <h3>广州应用科技学院 · 大专 · 计算机应用</h3>
+            <p>计算机应用基础学习，为后续音频技术学习打下数字化基础。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact / CTA -->
+    <section class="cta-band" id="contact">
+      <div class="cta-inner">
+        <div>
+          <h2>欢迎联系合作</h2>
+          <p>无论是演出合作、录音制作还是技术交流，都非常期待与你的沟通。</p>
+        </div>
+        <div class="hero-actions">
+          <a class="btn primary" href="mailto:3221202923@qq.com">3221202923@qq.com</a>
+          <a class="btn" href="tel:19864292005">19864292005</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>© 2026 林锐锋 · Personal Homepage</footer>
+</body>
+</html>

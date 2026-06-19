@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>后台管理 — 林锐锋个人主页</title>
+  <style>
+    :root {
+      --bg: #0f1318;
+      --surface: #1a2029;
+      --surface2: #232c38;
+      --border: #2e3a48;
+      --accent: #0d9488;
+      --accent-light: rgba(13,148,136,.15);
+      --accent-2: #f59e0b;
+      --text: #e2e8f0;
+      --muted: #7a8fa0;
+      --danger: #ef4444;
+      --danger-light: rgba(239,68,68,.12);
+      --success: #22c55e;
+      --radius: 10px;
+      --sidebar: 240px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Microsoft YaHei","PingFang SC",Arial,sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+    input, textarea, select { font-family: inherit; }
+
+    /* ── Login Screen ── */
+    #login-screen {
+      position: fixed; inset: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--bg);
+    }
+    .login-box {
+      width: 380px; padding: 40px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; box-shadow: 0 40px 80px rgba(0,0,0,.5);
+    }
+    .login-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+    .login-logo .mark {
+      width: 44px; height: 44px; display: grid; place-items: center;
+      background: var(--accent); border-radius: 10px; font-size: 20px; font-weight: 900;
+    }
+    .login-logo h1 { font-size: 20px; line-height: 1.3; }
+    .login-logo p { color: var(--muted); font-size: 13px; }
+    .login-label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+    .login-input {
+      width: 100%; padding: 11px 14px; margin-bottom: 16px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-size: 15px;
+      transition: border-color .2s;
+    }
+    .login-input:focus { outline: none; border-color: var(--accent); }
+    .login-btn {
+      width: 100%; padding: 12px; background: var(--accent);
+      border: none; border-radius: 8px; color: #fff;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      transition: opacity .2s;
+    }
+    .login-btn:hover { opacity: .88; }
+    .login-err { color: var(--danger); font-size: 13px; margin-top: 10px; display: none; }
+
+    /* ── App Shell ── */
+    #app { display: none; min-height: 100vh; }
+    .shell { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar); flex-shrink: 0;
+      background: var(--surface); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh;
+    }
+    .sidebar-brand {
+      padding: 20px 18px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sidebar-brand .mark {
+      width: 32px; height: 32px; display: grid; place-items: center;
+      background: var(--accent); border-radius: 8px; font-size: 14px; font-weight: 900;
+    }
+    .sidebar-brand span { font-weight: 700; font-size: 15px; }
+    nav.sidebar-nav { flex: 1; padding: 12px 10px; overflow-y: auto; }
+    .nav-group-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; padding: 12px 8px 6px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 10px; border-radius: 8px; font-size: 14px; font-weight: 500;
+      cursor: pointer; color: var(--muted); transition: background .15s, color .15s;
+      border: none; background: none; width: 100%; text-align: left;
+    }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: var(--accent-light); color: var(--accent); }
+    .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .sidebar-footer {
+      padding: 14px 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Main Content ── */
+    .main { flex: 1; overflow-x: hidden; }
+    .topbar {
+      position: sticky; top: 0; z-index: 10;
+      padding: 14px 28px;
+      background: rgba(15,19,24,.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    }
+    .topbar-title { font-size: 18px; font-weight: 700; }
+    .topbar-actions { display: flex; gap: 10px; align-items: center; }
+    .btn-save {
+      padding: 8px 20px; background: var(--accent); border: none;
+      border-radius: 8px; color: #fff; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: opacity .2s;
+    }
+    .btn-save:hover { opacity: .88; }
+    .btn-outline {
+      padding: 8px 16px; background: transparent;
+      border: 1px solid var(--border); border-radius: 8px;
+      color: var(--muted); font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: border-color .15s, color .15s;
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .preview-link {
+      padding: 8px 16px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 8px;
+      color: var(--muted); font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: color .15s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .preview-link:hover { color: var(--text); }
+
+    /* ── Page Content ── */
+    .page { display: none; padding: 28px; max-width: 860px; }
+    .page.active { display: block; }
+
+    /* ── Cards / Sections ── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 15px; font-weight: 700; margin-bottom: 18px;
+      padding-bottom: 14px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    /* ── Form Fields ── */
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 13px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+    .field input, .field textarea, .field select {
+      width: 100%; padding: 10px 13px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-size: 14px;
+      transition: border-color .2s;
+    }
+    .field input:focus, .field textarea:focus, .field select:focus {
+      outline: none; border-color: var(--accent);
+    }
+    .field textarea { resize: vertical; min-height: 88px; line-height: 1.6; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .field-row.col3 { grid-template-columns: 1fr 1fr 1fr; }
+    .field-hint { font-size: 12px; color: var(--muted); margin-top: 5px; }
+
+    /* ── List Items (projects / education / music) ── */
+    .list-item {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 16px 18px; margin-bottom: 12px;
+      display: flex; align-items: flex-start; gap: 14px;
+    }
+    .list-item-body { flex: 1; min-width: 0; }
+    .list-item-title { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .list-item-sub { font-size: 13px; color: var(--muted); margin-top: 3px; }
+    .list-item-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .btn-icon {
+      width: 32px; height: 32px; display: grid; place-items: center;
+      border: 1px solid var(--border); border-radius: 6px;
+      background: transparent; color: var(--muted);
+      cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+    }
+    .btn-icon:hover { background: var(--surface); color: var(--text); }
+    .btn-icon.danger:hover { background: var(--danger-light); color: var(--danger); border-color: var(--danger); }
+    .btn-add {
+      width: 100%; padding: 10px; margin-top: 4px;
+      background: transparent; border: 1px dashed var(--border);
+      border-radius: 8px; color: var(--muted); font-size: 14px;
+      cursor: pointer; transition: border-color .15s, color .15s;
+    }
+    .btn-add:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 50;
+      background: rgba(0,0,0,.6); backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; width: 100%; max-width: 600px;
+      max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 40px 80px rgba(0,0,0,.5);
+    }
+    .modal-head {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-head h3 { font-size: 17px; }
+    .modal-close {
+      width: 30px; height: 30px; display: grid; place-items: center;
+      border: none; background: var(--surface2); border-radius: 6px;
+      color: var(--muted); cursor: pointer; font-size: 18px;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { padding: 20px 24px; }
+    .modal-foot {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: flex-end; gap: 10px;
+    }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 28px; right: 28px; z-index: 200;
+      padding: 12px 20px; border-radius: 10px;
+      font-size: 14px; font-weight: 600; color: #fff;
+      background: var(--success); box-shadow: 0 8px 24px rgba(0,0,0,.3);
+      transform: translateY(20px); opacity: 0;
+      transition: transform .3s ease, opacity .3s ease;
+      pointer-events: none;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.error { background: var(--danger); }
+
+    /* ── Tags Input ── */
+    .tags-wrap {
+      display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+      min-height: 42px; padding: 6px 10px;
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+      cursor: text; transition: border-color .2s;
+    }
+    .tags-wrap:focus-within { border-color: var(--accent); }
+    .tag-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px; background: var(--accent-light); border-radius: 4px;
+      font-size: 13px; color: var(--accent); font-weight: 600;
+    }
+    .tag-chip button { border: none; background: none; color: var(--accent); cursor: pointer; font-size: 14px; padding: 0; line-height: 1; }
+    .tag-input {
+      border: none; background: transparent; color: var(--text);
+      font-size: 14px; outline: none; min-width: 100px; flex: 1;
+    }
+
+    /* ── Bullet list editor ── */
+    .bullets-list { display: grid; gap: 8px; margin-bottom: 8px; }
+    .bullet-row { display: flex; gap: 8px; align-items: center; }
+    .bullet-input {
+      flex: 1; padding: 8px 12px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 7px; color: var(--text); font-size: 14px;
+    }
+    .bullet-input:focus { outline: none; border-color: var(--accent); }
+    .btn-remove-bullet {
+      width: 30px; height: 30px; border: none; background: transparent;
+      color: var(--muted); cursor: pointer; font-size: 18px; flex-shrink: 0;
+    }
+    .btn-remove-bullet:hover { color: var(--danger); }
+
+    /* ── Impact editor ── */
+    .impact-list { display: grid; gap: 8px; margin-bottom: 8px; }
+    .impact-row { display: grid; grid-template-columns: 1fr 2fr auto; gap: 8px; align-items: center; }
+    .impact-input {
+      padding: 8px 12px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 7px; color: var(--text); font-size: 14px;
+    }
+    .impact-input:focus { outline: none; border-color: var(--accent); }
+
+    /* ── Badge ── */
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 4px;
+      font-size: 12px; font-weight: 700; background: var(--accent-light); color: var(--accent);
+    }
+    .badge.featured { background: rgba(245,158,11,.15); color: var(--accent-2); }
+
+    /* ── Dashboard ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px;
+    }
+    .stat-card .num { font-size: 28px; font-weight: 800; color: var(--accent); }
+    .stat-card .lbl { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 720px) {
+      .sidebar { display: none; }
+      .stats-grid { grid-template-columns: repeat(2,1fr); }
+      .field-row, .field-row.col3 { grid-template-columns: 1fr; }
+      .impact-row { grid-template-columns: 1fr 1fr auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══════════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="mark">林</div>
+      <div>
+        <h1>后台管理系统</h1>
+        <p>林锐锋个人主页</p>
+      </div>
+    </div>
+    <label class="login-label" for="pwd">管理员密码</label>
+    <input id="pwd" class="login-input" type="password" placeholder="请输入密码" autocomplete="current-password">
+    <button class="login-btn" onclick="doLogin()">登录</button>
+    <p class="login-err" id="login-err">密码错误，请重试</p>
+  </div>
+</div>
+
+<!-- ══ APP ════════════════════════════════════════════ -->
+<div id="app">
+  <div class="shell">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="mark">林</div>
+        <span>管理后台</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-group-label">概览</div>
+        <button class="nav-item active" onclick="switchPage('dashboard', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          仪表盘
+        </button>
+        <div class="nav-group-label">内容管理</div>
+        <button class="nav-item" onclick="switchPage('profile', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          个人信息
+        </button>
+        <button class="nav-item" onclick="switchPage('projects', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h12"/></svg>
+          项目经历
+        </button>
+        <button class="nav-item" onclick="switchPage('skills', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          技能标签
+        </button>
+        <button class="nav-item" onclick="switchPage('music', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          音乐作品
+        </button>
+        <button class="nav-item" onclick="switchPage('education', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          教育经历
+        </button>
+        <div class="nav-group-label">系统</div>
+        <button class="nav-item" onclick="switchPage('settings', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          系统设置
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="nav-item" onclick="logout()" style="color:var(--danger)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          退出登录
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+      <div class="topbar">
+        <div class="topbar-title" id="page-title">仪表盘</div>
+        <div class="topbar-actions">
+          <a class="preview-link" href="index.html" target="_blank">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            预览前台
+          </a>
+        </div>
+      </div>
+
+      <!-- ── Dashboard ── -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid" id="dash-stats"></div>
+        <div class="card">
+          <div class="card-title">快捷操作</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+            <button class="btn-outline" style="padding:14px;font-size:14px" onclick="switchPage('profile', document.querySelector('.nav-item:nth-child(3)'))">✏️ 编辑个人信息</button>
+            <button class="btn-outline" style="padding:14px;font-size:14px" onclick="openNewProject()">➕ 添加项目</button>
+            <button class="btn-outline" style="padding:14px;font-size:14px" onclick="openNewMusic()">🎵 上传音乐</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">使用说明</div>
+          <div style="color:var(--muted);font-size:14px;line-height:1.9">
+            <p>⚡ 本系统使用 <strong style="color:var(--text)">本地 JSON 文件</strong> 存储数据，修改后点击「保存」按钮即可更新前台内容。</p>
+            <p style="margin-top:8px">🎵 音频文件请手动放入 <code style="background:var(--surface2);padding:2px 6px;border-radius:4px">音频文件以及主页链接/</code> 目录，然后在音乐管理中填写文件路径。</p>
+            <p style="margin-top:8px">🌐 部署上线后，可将 JSON 文件迁移到 Supabase 实现真正的在线后台管理。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Profile ── -->
+      <div class="page" id="page-profile">
+        <div class="card">
+          <div class="card-title">基本信息</div>
+          <div class="field-row">
+            <div class="field"><label>姓名</label><input id="p-name" type="text"></div>
+            <div class="field"><label>性别</label><input id="p-gender" type="text" placeholder="男"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>年龄</label><input id="p-age" type="text" placeholder="23岁"></div>
+            <div class="field"><label>学校专业</label><input id="p-school" type="text"></div>
+          </div>
+          <div class="field">
+            <label>职业标题（Hero 副标题）</label>
+            <input id="p-title" type="text">
+          </div>
+          <div class="field">
+            <label>Hero 介绍文案</label>
+            <textarea id="p-hero-copy" rows="3"></textarea>
+          </div>
+          <div class="field">
+            <label>方向标签</label>
+            <input id="p-direction" type="text" placeholder="录音 / 音效 / 现场执行 / 项目统筹">
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">联系方式</div>
+          <div class="field-row">
+            <div class="field"><label>电话</label><input id="p-phone" type="text"></div>
+            <div class="field"><label>邮箱</label><input id="p-email" type="email"></div>
+          </div>
+          <div class="field"><label>网易云主页链接</label><input id="p-netease" type="url"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">关于我</div>
+          <div class="field"><label>关于我标题</label><input id="p-about-title" type="text"></div>
+          <div class="field"><label>关于我描述</label><textarea id="p-about-lead"></textarea></div>
+        </div>
+        <div class="card">
+          <div class="card-title">联系 CTA 区块</div>
+          <div class="field"><label>CTA 标题</label><input id="p-cta-title" type="text"></div>
+          <div class="field"><label>CTA 描述</label><textarea id="p-cta-desc" rows="2"></textarea></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Hero 数据统计</div>
+          <div id="hero-stats-editor"></div>
+          <button class="btn-add" onclick="addHeroStat()">+ 添加统计数字</button>
+        </div>
+        <div class="card">
+          <div class="card-title">核心优势（About 区块）</div>
+          <div id="strengths-editor"></div>
+          <button class="btn-add" onclick="addStrength()">+ 添加优势</button>
+        </div>
+        <button class="btn-save" style="padding:12px 36px;font-size:15px" onclick="saveProfile()">保存所有个人信息</button>
+      </div>
+
+      <!-- ── Projects ── -->
+      <div class="page" id="page-projects">
+        <div class="card">
+          <div class="card-title">
+            项目列表
+            <button class="btn-save" style="padding:6px 16px;font-size:13px" onclick="openNewProject()">+ 新建项目</button>
+          </div>
+          <div id="projects-list"></div>
+        </div>
+      </div>
+
+      <!-- ── Skills ── -->
+      <div class="page" id="page-skills">
+        <div class="card">
+          <div class="card-title">
+            技能分类
+            <button class="btn-save" style="padding:6px 16px;font-size:13px" onclick="openNewSkill()">+ 新建分类</button>
+          </div>
+          <div id="skills-list"></div>
+        </div>
+      </div>
+
+      <!-- ── Music ── -->
+      <div class="page" id="page-music">
+        <div class="card">
+          <div class="card-title">
+            音乐作品
+            <button class="btn-save" style="padding:6px 16px;font-size:13px" onclick="openNewMusic()">+ 添加作品</button>
+          </div>
+          <div id="music-list"></div>
+          <div style="margin-top:16px;padding:14px;background:rgba(13,148,136,.08);border-radius:8px;font-size:13px;color:var(--muted)">
+            💡 音频文件请放入项目根目录的 <code style="color:var(--accent)">音频文件以及主页链接/</code> 文件夹，然后填写相对路径，例如：<code style="color:var(--accent)">音频文件以及主页链接/歌曲名.wav</code>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Education ── -->
+      <div class="page" id="page-education">
+        <div class="card">
+          <div class="card-title">
+            教育经历
+            <button class="btn-save" style="padding:6px 16px;font-size:13px" onclick="openNewEdu()">+ 添加经历</button>
+          </div>
+          <div id="edu-list"></div>
+        </div>
+      </div>
+
+      <!-- ── Settings ── -->
+      <div class="page" id="page-settings">
+        <div class="card">
+          <div class="card-title">系统设置</div>
+          <div class="field">
+            <label>管理员密码（修改后刷新页面生效）</label>
+            <input id="new-pwd" type="password" placeholder="输入新密码">
+            <div class="field-hint">密码存储在浏览器本地，换浏览器需重新设置</div>
+          </div>
+          <button class="btn-save" onclick="savePwd()">修改密码</button>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color:var(--danger)">危险操作</div>
+          <p style="font-size:14px;color:var(--muted);margin-bottom:14px">以下操作不可撤销，请谨慎使用。</p>
+          <button class="btn-outline" style="border-color:var(--danger);color:var(--danger)" onclick="if(confirm('确认退出登录？'))logout()">退出登录</button>
+        </div>
+      </div>
+    </div><!-- /main -->
+  </div><!-- /shell -->
+</div><!-- /app -->
+
+<!-- ── Modal ── -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-head">
+      <h3 id="modal-title">编辑</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-foot">
+      <button class="btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn-save" id="modal-save-btn">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ══ Config ══════════════════════════════════════════════
+const DEFAULT_PWD = 'admin123';
+const DATA_FILES = {
+  profile: 'data/profile.json',
+  strengths: 'data/strengths.json',
+  projects: 'data/projects.json',
+  skills: 'data/skills.json',
+  music: 'data/music.json',
+  education: 'data/education.json',
+};
+
+// ══ State ════════════════════════════════════════════════
+let state = { profile: null, strengths: [], projects: [], skills: [], music: [], education: [] };
+let modalSaveCallback = null;
+let editingIndex = -1;
+
+// ══ Auth ═════════════════════════════════════════════════
+function getPwd() { return localStorage.getItem('admin_pwd') || DEFAULT_PWD; }
+function doLogin() {
+  const v = document.getElementById('pwd').value;
+  if (v === getPwd()) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadAll();
+  } else {
+    document.getElementById('login-err').style.display = 'block';
+  }
+}
+document.getElementById('pwd').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+function logout() { document.getElementById('app').style.display='none'; document.getElementById('login-screen').style.display='flex'; document.getElementById('pwd').value=''; }
+function savePwd() {
+  const v = document.getElementById('new-pwd').value.trim();
+  if (!v) { showToast('密码不能为空', true); return; }
+  localStorage.setItem('admin_pwd', v);
+  showToast('密码已修改');
+  document.getElementById('new-pwd').value = '';
+}
+
+// ══ Nav ══════════════════════════════════════════════════
+const pageTitles = { dashboard:'仪表盘', profile:'个人信息', projects:'项目经历', skills:'技能标签', music:'音乐作品', education:'教育经历', settings:'系统设置' };
+function switchPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  document.getElementById('page-title').textContent = pageTitles[id] || id;
+}
+
+// ══ Data Loading ═════════════════════════════════════════
+async function loadJSON(key) {
+  const r = await fetch(DATA_FILES[key] + '?t=' + Date.now());
+  return r.json();
+}
+async function loadAll() {
+  try {
+    const [profile, strengths, projects, skills, music, education] = await Promise.all([
+      loadJSON('profile'), loadJSON('strengths'), loadJSON('projects'),
+      loadJSON('skills'), loadJSON('music'), loadJSON('education')
+    ]);
+    state = { profile, strengths, projects, skills, music, education };
+    renderDashboard();
+    renderProfileForm();
+    renderProjectsList();
+    renderSkillsList();
+    renderMusicList();
+    renderEduList();
+  } catch(e) {
+    showToast('数据加载失败: ' + e.message, true);
+  }
+}
+
+// ══ Save (演示版 — 下载 JSON) ════════════════════════════
+function downloadJSON(filename, data) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+function showSaveHint(filename) {
+  showToast(`已下载 ${filename}，请替换 data/ 目录中的同名文件`);
+}
+
+// ══ Toast ════════════════════════════════════════════════
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show' + (isError ? ' error' : '');
+  setTimeout(() => { t.className = ''; }, 3000);
+}
+
+// ══ Modal ════════════════════════════════════════════════
+function openModal(title, bodyHTML, saveCb) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = bodyHTML;
+  modalSaveCallback = saveCb;
+  document.getElementById('modal-save-btn').onclick = () => { saveCb(); };
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modal-overlay')) return;
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+// ══ Dashboard ═══════════════════════════════════════════
+function renderDashboard() {
+  document.getElementById('dash-stats').innerHTML = `
+    <div class="stat-card"><div class="num">${state.projects.length}</div><div class="lbl">项目经历</div></div>
+    <div class="stat-card"><div class="num">${state.music.length}</div><div class="lbl">音乐作品</div></div>
+    <div class="stat-card"><div class="num">${state.skills.reduce((a,s)=>a+s.items.length,0)}</div><div class="lbl">技能标签</div></div>
+    <div class="stat-card"><div class="num">${state.education.length}</div><div class="lbl">教育经历</div></div>
+  `;
+}
+
+// ══ Profile ══════════════════════════════════════════════
+function renderProfileForm() {
+  const p = state.profile;
+  if (!p) return;
+  document.getElementById('p-name').value = p.name || '';
+  document.getElementById('p-gender').value = p.gender || '';
+  document.getElementById('p-age').value = p.age || '';
+  document.getElementById('p-school').value = p.school || '';
+  document.getElementById('p-title').value = p.title || '';
+  document.getElementById('p-hero-copy').value = p.hero_copy || '';
+  document.getElementById('p-direction').value = p.direction || '';
+  document.getElementById('p-phone').value = p.phone || '';
+  document.getElementById('p-email').value = p.email || '';
+  document.getElementById('p-netease').value = p.netease_url || '';
+  document.getElementById('p-about-title').value = p.about_title || '';
+  document.getElementById('p-about-lead').value = p.about_lead || '';
+  document.getElementById('p-cta-title').value = p.cta_title || '';
+  document.getElementById('p-cta-desc').value = p.cta_desc || '';
+  renderHeroStatsEditor();
+  renderStrengthsEditor();
+}
+
+function renderHeroStatsEditor() {
+  const stats = state.profile.hero_stats || [];
+  document.getElementById('hero-stats-editor').innerHTML = stats.map((s, i) => `
+    <div class="field-row" style="margin-bottom:10px;align-items:end">
+      <div class="field" style="margin:0"><label>数值</label><input class="hs-val" data-i="${i}" type="text" value="${esc(s.value)}"></div>
+      <div class="field" style="margin:0"><label>说明</label><input class="hs-lbl" data-i="${i}" type="text" value="${esc(s.label)}"></div>
+      <button class="btn-icon danger" onclick="removeHeroStat(${i})" style="height:38px;margin-bottom:2px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      </button>
+    </div>`).join('');
+}
+function addHeroStat() {
+  state.profile.hero_stats = state.profile.hero_stats || [];
+  state.profile.hero_stats.push({ value: '', label: '' });
+  renderHeroStatsEditor();
+}
+function removeHeroStat(i) {
+  state.profile.hero_stats.splice(i, 1);
+  renderHeroStatsEditor();
+}
+function collectHeroStats() {
+  const vals = document.querySelectorAll('.hs-val');
+  const lbls = document.querySelectorAll('.hs-lbl');
+  state.profile.hero_stats = Array.from(vals).map((v,i)=>({ value: v.value, label: lbls[i].value }));
+}
+
+function renderStrengthsEditor() {
+  document.getElementById('strengths-editor').innerHTML = state.strengths.map((s,i) => `
+    <div class="list-item">
+      <div class="list-item-body">
+        <div class="field" style="margin:0 0 10px"><label>标题</label><input class="str-title" data-i="${i}" type="text" value="${esc(s.title)}"></div>
+        <div class="field" style="margin:0"><label>描述</label><input class="str-desc" data-i="${i}" type="text" value="${esc(s.desc)}"></div>
+      </div>
+      <div class="list-item-actions" style="padding-top:24px">
+        <button class="btn-icon danger" onclick="removeStrength(${i})">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+        </button>
+      </div>
+    </div>`).join('');
+}
+function addStrength() {
+  state.strengths.push({ id: Date.now(), title: '', desc: '', color: 'accent' });
+  renderStrengthsEditor();
+}
+function removeStrength(i) {
+  state.strengths.splice(i, 1);
+  renderStrengthsEditor();
+}
+function collectStrengths() {
+  const titles = document.querySelectorAll('.str-title');
+  const descs = document.querySelectorAll('.str-desc');
+  state.strengths = Array.from(titles).map((t,i)=>({ ...state.strengths[i], title: t.value, desc: descs[i].value }));
+}
+
+function saveProfile() {
+  // Collect form values
+  collectHeroStats();
+  collectStrengths();
+  state.profile.name = document.getElementById('p-name').value;
+  state.profile.gender = document.getElementById('p-gender').value;
+  state.profile.age = document.getElementById('p-age').value;
+  state.profile.school = document.getElementById('p-school').value;
+  state.profile.title = document.getElementById('p-title').value;
+  state.profile.hero_copy = document.getElementById('p-hero-copy').value;
+  state.profile.direction = document.getElementById('p-direction').value;
+  state.profile.phone = document.getElementById('p-phone').value;
+  state.profile.email = document.getElementById('p-email').value;
+  state.profile.netease_url = document.getElementById('p-netease').value;
+  state.profile.about_title = document.getElementById('p-about-title').value;
+  state.profile.about_lead = document.getElementById('p-about-lead').value;
+  state.profile.cta_title = document.getElementById('p-cta-title').value;
+  state.profile.cta_desc = document.getElementById('p-cta-desc').value;
+  downloadJSON('profile.json', state.profile);
+  downloadJSON('strengths.json', state.strengths);
+  showToast('已下载 profile.json 和 strengths.json，请替换 data/ 目录中对应文件');
+}
+
+// ══ Projects ═════════════════════════════════════════════
+function renderProjectsList() {
+  document.getElementById('projects-list').innerHTML = state.projects.map((p,i) => `
+    <div class="list-item">
+      <div class="list-item-body">
+        <div class="list-item-title">${esc(p.title)} ${p.featured ? '<span class="badge featured">精选</span>' : ''}</div>
+        <div class="list-item-sub">${p.tags.join(' · ')} · ${esc(p.date)}</div>
+      </div>
+      <div class="list-item-actions">
+        <button class="btn-icon" onclick="editProject(${i})" title="编辑">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-icon danger" onclick="deleteProject(${i})" title="删除">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+        </button>
+      </div>
+    </div>`).join('') || '<p style="color:var(--muted);padding:12px">暂无项目，点击右上角新建</p>';
+}
+
+function projectModalHTML(p) {
+  const tags = (p.tags||[]).join(', ');
+  const impact = (p.impact||[]).map(v=>`${v.value}|${v.label}`).join('\n');
+  const bullets = (p.bullets||[]).join('\n');
+  return `
+    <div class="field"><label>项目标题</label><input id="mf-title" type="text" value="${esc(p.title||'')}"></div>
+    <div class="field-row">
+      <div class="field"><label>日期</label><input id="mf-date" type="text" value="${esc(p.date||'')}"></div>
+      <div class="field"><label>
+        <input id="mf-featured" type="checkbox" ${p.featured?'checked':''} style="margin-right:6px">
+        设为精选（大卡片）</label><div style="height:38px"></div>
+      </div>
+    </div>
+    <div class="field"><label>标签（逗号分隔）</label><input id="mf-tags" type="text" value="${esc(tags)}"></div>
+    <div class="field"><label>项目描述</label><textarea id="mf-desc" rows="3">${esc(p.desc||'')}</textarea></div>
+    <div class="field"><label>数据亮点（每行一条，格式：数值|说明）</label><textarea id="mf-impact" rows="3" placeholder="15%|整体预算下调\n3轮|面对面谈判">${esc(impact)}</textarea></div>
+    <div class="field"><label>要点列表（每行一条）</label><textarea id="mf-bullets" rows="4" placeholder="负责...&#10;协助...">${esc(bullets)}</textarea></div>
+  `;
+}
+function collectProjectModal(p) {
+  p.title = document.getElementById('mf-title').value;
+  p.date = document.getElementById('mf-date').value;
+  p.featured = document.getElementById('mf-featured').checked;
+  p.tags = document.getElementById('mf-tags').value.split(',').map(s=>s.trim()).filter(Boolean);
+  p.desc = document.getElementById('mf-desc').value;
+  p.impact = document.getElementById('mf-impact').value.split('\n').filter(Boolean).map(line => {
+    const [value, label=''] = line.split('|');
+    return { value: value.trim(), label: label.trim() };
+  });
+  p.bullets = document.getElementById('mf-bullets').value.split('\n').filter(Boolean);
+  return p;
+}
+function openNewProject() {
+  switchPage('projects', document.querySelectorAll('.nav-item')[4]);
+  editingIndex = -1;
+  openModal('新建项目', projectModalHTML({}), () => {
+    const p = collectProjectModal({ id: Date.now() });
+    state.projects.push(p);
+    renderProjectsList();
+    downloadJSON('projects.json', state.projects);
+    showToast('项目已添加，请替换 data/projects.json');
+    closeModal();
+  });
+}
+function editProject(i) {
+  editingIndex = i;
+  openModal('编辑项目', projectModalHTML(state.projects[i]), () => {
+    state.projects[i] = collectProjectModal({...state.projects[i]});
+    renderProjectsList();
+    downloadJSON('projects.json', state.projects);
+    showToast('项目已更新，请替换 data/projects.json');
+    closeModal();
+  });
+}
+function deleteProject(i) {
+  if (!confirm(`确认删除「${state.projects[i].title}」？`)) return;
+  state.projects.splice(i, 1);
+  renderProjectsList();
+  downloadJSON('projects.json', state.projects);
+  showToast('项目已删除，请替换 data/projects.json');
+}
+
+// ══ Skills ═══════════════════════════════════════════════
+function renderSkillsList() {
+  document.getElementById('skills-list').innerHTML = state.skills.map((s,i) => `
+    <div class="list-item">
+      <div class="list-item-body">
+        <div class="list-item-title">${esc(s.category)}</div>
+        <div class="list-item-sub">${s.items.join(' · ')}</div>
+      </div>
+      <div class="list-item-actions">
+        <button class="btn-icon" onclick="editSkill(${i})" title="编辑">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-icon danger" onclick="deleteSkill(${i})" title="删除">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+        </button>
+      </div>
+    </div>`).join('') || '<p style="color:var(--muted);padding:12px">暂无技能分类</p>';
+}
+function skillModalHTML(s) {
+  return `
+    <div class="field"><label>分类名称</label><input id="sf-cat" type="text" value="${esc(s.category||'')}"></div>
+    <div class="field"><label>分类描述</label><input id="sf-desc" type="text" value="${esc(s.desc||'')}"></div>
+    <div class="field"><label>技能标签（逗号分隔）</label><textarea id="sf-items" rows="3">${esc((s.items||[]).join(', '))}</textarea></div>
+  `;
+}
+function collectSkillModal(s) {
+  s.category = document.getElementById('sf-cat').value;
+  s.desc = document.getElementById('sf-desc').value;
+  s.items = document.getElementById('sf-items').value.split(',').map(v=>v.trim()).filter(Boolean);
+  return s;
+}
+function openNewSkill() {
+  openModal('新建技能分类', skillModalHTML({}), () => {
+    state.skills.push(collectSkillModal({ id: Date.now() }));
+    renderSkillsList();
+    downloadJSON('skills.json', state.skills);
+    showToast('技能分类已添加，请替换 data/skills.json');
+    closeModal();
+  });
+}
+function editSkill(i) {
+  openModal('编辑技能分类', skillModalHTML(state.skills[i]), () => {
+    state.skills[i] = collectSkillModal({...state.skills[i]});
+    renderSkillsList();
+    downloadJSON('skills.json', state.skills);
+    showToast('技能已更新，请替换 data/skills.json');
+    closeModal();
+  });
+}
+function deleteSkill(i) {
+  if (!confirm('确认删除？')) return;
+  state.skills.splice(i, 1);
+  renderSkillsList();
+  downloadJSON('skills.json', state.skills);
+  showToast('已删除，请替换 data/skills.json');
+}
+
+// ══ Music ════════════════════════════════════════════════
+function renderMusicList() {
+  document.getElementById('music-list').innerHTML = state.music.map((m,i) => `
+    <div class="list-item">
+      <div class="list-item-body">
+        <div class="list-item-title">🎵 ${esc(m.title)}</div>
+        <div class="list-item-sub">${esc(m.desc)} · <code style="font-size:12px">${esc(m.file)}</code></div>
+      </div>
+      <div class="list-item-actions">
+        <button class="btn-icon" onclick="editMusic(${i})" title="编辑">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-icon danger" onclick="deleteMusic(${i})" title="删除">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+        </button>
+      </div>
+    </div>`).join('') || '<p style="color:var(--muted);padding:12px">暂无音乐作品</p>';
+}
+function musicModalHTML(m) {
+  return `
+    <div class="field"><label>作品名称</label><input id="mu-title" type="text" value="${esc(m.title||'')}"></div>
+    <div class="field"><label>简介描述</label><input id="mu-desc" type="text" value="${esc(m.desc||'')}"></div>
+    <div class="field">
+      <label>音频文件路径</label>
+      <input id="mu-file" type="text" value="${esc(m.file||'')}" placeholder="音频文件以及主页链接/歌曲名.wav">
+      <div class="field-hint">将音频文件放入 音频文件以及主页链接/ 目录，填写相对路径</div>
+    </div>
+  `;
+}
+function collectMusicModal(m) {
+  m.title = document.getElementById('mu-title').value;
+  m.desc = document.getElementById('mu-desc').value;
+  m.file = document.getElementById('mu-file').value;
+  return m;
+}
+function openNewMusic() {
+  switchPage('music', document.querySelectorAll('.nav-item')[6]);
+  openModal('添加音乐作品', musicModalHTML({}), () => {
+    state.music.push(collectMusicModal({ id: Date.now(), cover: '' }));
+    renderMusicList();
+    downloadJSON('music.json', state.music);
+    showToast('音乐已添加，请替换 data/music.json');
+    closeModal();
+  });
+}
+function editMusic(i) {
+  openModal('编辑音乐作品', musicModalHTML(state.music[i]), () => {
+    state.music[i] = collectMusicModal({...state.music[i]});
+    renderMusicList();
+    downloadJSON('music.json', state.music);
+    showToast('已更新，请替换 data/music.json');
+    closeModal();
+  });
+}
+function deleteMusic(i) {
+  if (!confirm('确认删除？')) return;
+  state.music.splice(i, 1);
+  renderMusicList();
+  downloadJSON('music.json', state.music);
+  showToast('已删除，请替换 data/music.json');
+}
+
+// ══ Education ════════════════════════════════════════════
+function renderEduList() {
+  document.getElementById('edu-list').innerHTML = state.education.map((e,i) => `
+    <div class="list-item">
+      <div class="list-item-body">
+        <div class="list-item-title">${esc(e.school)} · ${esc(e.major)}</div>
+        <div class="list-item-sub">${esc(e.period)} · ${esc(e.degree)}</div>
+      </div>
+      <div class="list-item-actions">
+        <button class="btn-icon" onclick="editEdu(${i})" title="编辑">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-icon danger" onclick="deleteEdu(${i})" title="删除">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+        </button>
+      </div>
+    </div>`).join('') || '<p style="color:var(--muted);padding:12px">暂无教育经历</p>';
+}
+function eduModalHTML(e) {
+  return `
+    <div class="field-row">
+      <div class="field"><label>就读时间</label><input id="ef-period" type="text" value="${esc(e.period||'')}" placeholder="2023-2026"></div>
+      <div class="field"><label>学历类型</label><input id="ef-degree" type="text" value="${esc(e.degree||'')}" placeholder="全日制大专"></div>
+    </div>
+    <div class="field"><label>学校名称</label><input id="ef-school" type="text" value="${esc(e.school||'')}"></div>
+    <div class="field"><label>专业</label><input id="ef-major" type="text" value="${esc(e.major||'')}"></div>
+    <div class="field"><label>描述</label><textarea id="ef-desc" rows="3">${esc(e.desc||'')}</textarea></div>
+  `;
+}
+function collectEduModal(e) {
+  e.period = document.getElementById('ef-period').value;
+  e.degree = document.getElementById('ef-degree').value;
+  e.school = document.getElementById('ef-school').value;
+  e.major = document.getElementById('ef-major').value;
+  e.desc = document.getElementById('ef-desc').value;
+  return e;
+}
+function openNewEdu() {
+  openModal('添加教育经历', eduModalHTML({}), () => {
+    state.education.push(collectEduModal({ id: Date.now() }));
+    renderEduList();
+    downloadJSON('education.json', state.education);
+    showToast('已添加，请替换 data/education.json');
+    closeModal();
+  });
+}
+function editEdu(i) {
+  openModal('编辑教育经历', eduModalHTML(state.education[i]), () => {
+    state.education[i] = collectEduModal({...state.education[i]});
+    renderEduList();
+    downloadJSON('education.json', state.education);
+    showToast('已更新，请替换 data/education.json');
+    closeModal();
+  });
+}
+function deleteEdu(i) {
+  if (!confirm('确认删除？')) return;
+  state.education.splice(i, 1);
+  renderEduList();
+  downloadJSON('education.json', state.education);
+  showToast('已删除，请替换 data/education.json');
+}
+
+// ══ Utils ════════════════════════════════════════════════
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+</script>
+</body>
+</html>
