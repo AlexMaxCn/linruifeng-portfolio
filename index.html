@@ -236,13 +236,13 @@
 
     .viz-btn {
       width: 48px; height: 48px; border-radius: 50%;
-      background: var(--surface-alt); border: 1.5px solid var(--rule);
-      cursor: pointer; font-size: 15px; color: var(--ink-muted);
+      background: var(--ink); border: 1.5px solid rgba(255,255,255,0.08);
+      cursor: pointer; font-size: 14px; color: rgba(255,255,255,0.55);
       display: grid; place-items: center;
       transition: all 0.25s;
     }
-    .viz-btn:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-light); }
-    .viz-btn:active { transform: scale(0.92); }
+    .viz-btn:hover { border-color: var(--teal); color: #fff; background: #1a1a2e; }
+    .viz-btn:active { transform: scale(0.92); background: var(--teal); color: #fff; }
 
     .hero-meta {
       display: flex; gap: 40px; margin-top: 48px;
@@ -696,9 +696,9 @@
           <!-- 控制面板 -->
           <div class="viz-controls">
             <button class="viz-btn" data-action="prev" aria-label="上一首">⏮</button>
-            <button class="viz-btn" data-action="rewind" aria-label="快退10秒">⏪</button>
+            <button class="viz-btn" data-action="rewind" aria-label="快退10秒">↻</button>
             <button class="viz-play-btn" id="viz-play-btn" aria-label="播放">▶</button>
-            <button class="viz-btn" data-action="forward" aria-label="快进10秒">⏩</button>
+            <button class="viz-btn" data-action="forward" aria-label="快进10秒">↺</button>
             <button class="viz-btn" data-action="next" aria-label="下一首">⏭</button>
           </div>
         </div>
