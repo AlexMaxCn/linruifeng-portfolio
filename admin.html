@@ -252,6 +252,31 @@
       font-size: 14px; outline: none; min-width: 100px; flex: 1;
     }
 
+    /* ── Audio Upload Area ── */
+    .upload-area {
+      border: 2px dashed var(--border); border-radius: 10px;
+      padding: 28px 20px; text-align: center; cursor: pointer;
+      transition: border-color .2s, background .2s;
+      background: var(--surface2);
+    }
+    .upload-area:hover { border-color: var(--accent); background: rgba(13,148,136,.05); }
+    .upload-area.uploading { border-color: var(--accent-2); pointer-events: none; }
+    .upload-area.success { border-color: var(--success); }
+    .upload-area.error { border-color: var(--danger); }
+    .upload-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--muted); }
+    .upload-placeholder svg { color: var(--muted); transition: color .2s; }
+    .upload-area:hover .upload-placeholder svg { color: var(--accent); }
+    .upload-placeholder > span:first-of-type { font-size: 14px; font-weight: 600; color: var(--text); }
+    .upload-hint { font-size: 12px; color: var(--muted); }
+    .upload-progress-bar {
+      width: 100%; height: 4px; border-radius: 2px;
+      background: var(--surface); overflow: hidden; margin-top: 10px; display: none;
+    }
+    .upload-progress-fill {
+      height: 100%; width: 0%; border-radius: 2px;
+      background: var(--accent); transition: width .3s ease;
+    }
+
     /* ── Bullet list editor ── */
     .bullets-list { display: grid; gap: 8px; margin-bottom: 8px; }
     .bullet-row { display: flex; gap: 8px; align-items: center; }
@@ -399,7 +424,7 @@
           <div style="color:var(--muted);font-size:14px;line-height:1.9">
             <p>✅ 本系统现已支持 <strong style="color:var(--text)">GitHub API 直写</strong>，配置 Token 后点击保存即可直接更新线上数据，无需手动操作。</p>
             <p style="margin-top:8px">🔑 首次使用请在「系统设置」中配置 <strong style="color:var(--accent)">GitHub Personal Access Token</strong>（需要 <code style="background:var(--surface2);padding:2px 6px;border-radius:4px">repo</code> 权限）。</p>
-            <p style="margin-top:8px">🎵 音频文件仍需手动上传到 <code style="background:var(--surface2);padding:2px 6px;border-radius:4px">音频文件以及主页链接/</code> 目录，或通过 GitHub 上传。</p>
+            <p style="margin-top:8px">🎵 音乐作品支持 <strong style="color:var(--accent)">一键上传音频文件</strong>，在「音乐作品」页点击添加，选择文件即可自动上传到 GitHub。</p>
             <p style="margin-top:8px">🌐 保存后 GitHub Pages 会自动重新构建（约 1-2 分钟），刷新前台即可看到更新。</p>
           </div>
         </div>
@@ -492,7 +517,7 @@
           </div>
           <div id="music-list"></div>
           <div style="margin-top:16px;padding:14px;background:rgba(13,148,136,.08);border-radius:8px;font-size:13px;color:var(--muted)">
-            💡 音频文件请放入项目根目录的 <code style="color:var(--accent)">音频文件以及主页链接/</code> 文件夹，然后填写相对路径，例如：<code style="color:var(--accent)">音频文件以及主页链接/歌曲名.wav</code>
+            💡 点击「添加作品」可直接选择本地音频文件一键上传，文件自动保存到 <code style="color:var(--accent)">audio/</code> 目录并填充路径。也支持手动输入路径。
           </div>
         </div>
       </div>
@@ -793,6 +818,156 @@ function showToast(msg, isError = false) {
   setTimeout(() => { t.className = ''; }, 3000);
 }
 
+// ══ Upload Audio File to GitHub ═══════════════════════════
+async function uploadAudioFile(file, onProgress) {
+  const token = getToken();
+  if (!token) {
+    showToast('请先在「系统设置」中配置 GitHub Token', true);
+    switchPage('settings', document.querySelectorAll('.nav-item')[7]);
+    return null;
+  }
+
+  // File size check (GitHub Contents API limit: 100MB)
+  const maxSize = 100 * 1024 * 1024;
+  if (file.size > maxSize) {
+    showToast('文件超过 100MB 限制，请压缩后再上传', true);
+    return null;
+  }
+
+  if (onProgress) onProgress(5);
+
+  // Convert to base64 in chunks (avoids call stack overflow on large files)
+  const arrayBuffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(arrayBuffer);
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode.apply(null, chunk);
+    if (onProgress) onProgress(5 + Math.min(i / bytes.length * 45, 45));
+  }
+  const base64 = btoa(binary);
+
+  const filePath = 'audio/' + file.name;
+
+  if (onProgress) onProgress(55);
+
+  // Get SHA if file already exists (for overwrite)
+  let sha = null;
+  try {
+    const r = await fetch(
+      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${filePath}?ref=${GH_BRANCH}`,
+      { headers: { Authorization: `token ${token}` } }
+    );
+    if (r.ok) sha = (await r.json()).sha;
+  } catch(e) {}
+
+  if (onProgress) onProgress(65);
+
+  // Upload via Contents API
+  const body = {
+    message: `Upload audio: ${file.name}`,
+    content: base64,
+    branch: GH_BRANCH,
+  };
+  if (sha) body.sha = sha;
+
+  const r = await fetch(
+    `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${filePath}`,
+    {
+      method: 'PUT',
+      headers: {
+        Authorization: `token ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    }
+  );
+
+  if (onProgress) onProgress(100);
+
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({ message: `HTTP ${r.status}` }));
+    throw new Error(err.message || `上传失败：${r.status}`);
+  }
+
+  return filePath;
+}
+
+// ══ Handle Audio File Selection (in modal) ════════════════
+async function handleAudioUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const status = document.getElementById('upload-status');
+  const uploadArea = document.getElementById('upload-area');
+  const progressBar = document.getElementById('upload-progress-bar');
+  const progressFill = document.getElementById('upload-progress-fill');
+  const saveBtn = document.getElementById('modal-save-btn');
+
+  const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+
+  // Update UI to uploading state
+  uploadArea.classList.add('uploading');
+  uploadArea.classList.remove('success', 'error');
+  progressBar.style.display = 'block';
+  progressFill.style.width = '0%';
+  saveBtn.disabled = true;
+
+  uploadArea.querySelector('.upload-placeholder').innerHTML = `
+    <div style="font-size:14px;color:var(--text);font-weight:600">${esc(file.name)}</div>
+    <span class="upload-hint">${sizeMB} MB · 正在上传...</span>
+  `;
+
+  status.style.display = 'block';
+  status.style.color = 'var(--accent)';
+  status.textContent = `⏳ 正在上传 ${file.name}（${sizeMB} MB）...`;
+
+  try {
+    const filePath = await uploadAudioFile(file, (pct) => {
+      progressFill.style.width = pct + '%';
+      status.textContent = `⏳ 正在上传 ${file.name}（${sizeMB} MB）... ${Math.round(pct)}%`;
+    });
+
+    if (filePath) {
+      // Auto-fill file path
+      document.getElementById('mu-file').value = filePath;
+
+      // Auto-fill title if empty
+      const titleInput = document.getElementById('mu-title');
+      if (!titleInput.value.trim()) {
+        const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+        titleInput.value = nameWithoutExt;
+      }
+
+      // Success UI
+      uploadArea.classList.remove('uploading');
+      uploadArea.classList.add('success');
+      status.style.color = 'var(--success)';
+      status.textContent = '✅ 上传成功！文件路径已自动填充';
+      uploadArea.querySelector('.upload-placeholder').innerHTML = `
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span style="color:var(--success);font-weight:600">${esc(file.name)}</span>
+        <span class="upload-hint">${sizeMB} MB · 点击可重新选择文件</span>
+      `;
+    }
+  } catch (e) {
+    uploadArea.classList.remove('uploading');
+    uploadArea.classList.add('error');
+    status.style.color = 'var(--danger)';
+    status.textContent = '❌ 上传失败：' + e.message;
+    uploadArea.querySelector('.upload-placeholder').innerHTML = `
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+      <span style="color:var(--danger);font-weight:600">上传失败</span>
+      <span class="upload-hint">点击重新选择文件</span>
+    `;
+  } finally {
+    saveBtn.disabled = false;
+    // Reset file input so the same file can be selected again
+    input.value = '';
+  }
+}
+
 // ══ Modal ════════════════════════════════════════════════
 function openModal(title, bodyHTML, saveCb) {
   document.getElementById('modal-title').textContent = title;
@@ -1055,7 +1230,7 @@ function renderMusicList() {
   document.getElementById('music-list').innerHTML = state.music.map((m,i) => `
     <div class="list-item">
       <div class="list-item-body">
-        <div class="list-item-title">🎵 ${esc(m.title)}</div>
+        <div class="list-item-title">🎵 ${esc(m.title)} ${m.featured ? '<span class="badge featured">精选</span>' : ''}</div>
         <div class="list-item-sub">${esc(m.desc)} · <code style="font-size:12px">${esc(m.file)}</code></div>
       </div>
       <div class="list-item-actions">
@@ -1070,12 +1245,33 @@ function renderMusicList() {
 }
 function musicModalHTML(m) {
   return `
+    <div class="field">
+      <label>上传音频文件</label>
+      <div class="upload-area" id="upload-area" onclick="document.getElementById('audio-file-input').click()">
+        <input type="file" id="audio-file-input" accept="audio/*" style="display:none" onchange="handleAudioUpload(this)">
+        <div class="upload-placeholder">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>点击选择音频文件</span>
+          <span class="upload-hint">支持 mp3/wav 等格式，自动上传到 GitHub audio/ 目录</span>
+        </div>
+        <div class="upload-progress-bar" id="upload-progress-bar">
+          <div class="upload-progress-fill" id="upload-progress-fill"></div>
+        </div>
+      </div>
+      <div id="upload-status" style="display:none;font-size:13px;margin-top:8px"></div>
+    </div>
     <div class="field"><label>作品名称</label><input id="mu-title" type="text" value="${esc(m.title||'')}"></div>
     <div class="field"><label>简介描述</label><input id="mu-desc" type="text" value="${esc(m.desc||'')}"></div>
     <div class="field">
       <label>音频文件路径</label>
-      <input id="mu-file" type="text" value="${esc(m.file||'')}" placeholder="音频文件以及主页链接/歌曲名.wav">
-      <div class="field-hint">将音频文件放入 音频文件以及主页链接/ 目录，填写相对路径</div>
+      <input id="mu-file" type="text" value="${esc(m.file||'')}" placeholder="audio/歌曲名.mp3">
+      <div class="field-hint">上传文件后自动填充，也可手动输入</div>
+    </div>
+    <div class="field">
+      <label>
+        <input id="mu-featured" type="checkbox" ${m.featured?'checked':''} style="margin-right:6px">
+        设为精选作品
+      </label>
     </div>
   `;
 }
@@ -1083,6 +1279,7 @@ function collectMusicModal(m) {
   m.title = document.getElementById('mu-title').value;
   m.desc = document.getElementById('mu-desc').value;
   m.file = document.getElementById('mu-file').value;
+  m.featured = document.getElementById('mu-featured').checked;
   return m;
 }
 async function openNewMusic() {
