@@ -198,6 +198,7 @@
       transform-origin: bottom;
     }
     @keyframes viz-pulse { 0%,100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
+    .viz-bars.active .viz-bar { animation: none; transform: scaleY(0.35); }
     .viz-controls { display: flex; gap: 16px; justify-content: center; align-items: center; }
     .viz-knob {
       width: 48px; height: 48px; border-radius: 50%;
@@ -219,6 +220,29 @@
       transition: all 0.25s var(--ease);
     }
     .viz-play-btn:hover { transform: scale(1.06); box-shadow: 0 6px 24px rgba(0,0,0,0.18); }
+    .viz-play-btn.playing { background: var(--teal); box-shadow: 0 4px 20px rgba(13,148,136,0.35); }
+
+    /* Hero Player: new styles */
+    .viz-track-name {
+      font-family: "Playfair Display", "Noto Sans SC", serif;
+      font-size: 15px; font-weight: 700; color: #fff;
+      margin: 12px 0 8px; white-space: nowrap; overflow: hidden;
+      text-overflow: ellipsis; letter-spacing: 0.01em;
+    }
+    .viz-progress-wrap { margin-top: 12px; }
+    .viz-progress-track { width: 100%; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.1); overflow: hidden; }
+    .viz-progress-fill { height: 100%; width: 0%; border-radius: 2px; background: var(--teal); transition: width 0.15s linear; }
+    .viz-time { font-size: 10px; color: rgba(255,255,255,0.35); margin-top: 6px; font-family: "JetBrains Mono", monospace; letter-spacing: 0.04em; }
+
+    .viz-btn {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--surface-alt); border: 1.5px solid var(--rule);
+      cursor: pointer; font-size: 15px; color: var(--ink-muted);
+      display: grid; place-items: center;
+      transition: all 0.25s;
+    }
+    .viz-btn:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-light); }
+    .viz-btn:active { transform: scale(0.92); }
 
     .hero-meta {
       display: flex; gap: 40px; margin-top: 48px;
@@ -635,10 +659,12 @@
         </div>
       </div>
       <div class="hero-visual reveal">
-        <div class="viz-device">
+        <div class="viz-device" id="hero-player">
+          <!-- 屏幕：显示歌曲信息 + 音频可视化 -->
           <div class="viz-screen">
-            <div class="viz-label">● 录音中 · 48kHz / 24bit</div>
-            <div class="viz-bars">
+            <div class="viz-label">● <span class="viz-status">就绪</span> · <span class="viz-format">48kHz / 24bit</span></div>
+            <div class="viz-track-name" id="viz-track-name">点击 ▶ 开始播放</div>
+            <div class="viz-bars" id="viz-bars">
               <span class="viz-bar" style="--i:1"></span>
               <span class="viz-bar" style="--i:2"></span>
               <span class="viz-bar" style="--i:3"></span>
@@ -660,13 +686,20 @@
               <span class="viz-bar" style="--i:19"></span>
               <span class="viz-bar" style="--i:20"></span>
             </div>
+            <div class="viz-progress-wrap">
+              <div class="viz-progress-track">
+                <div class="viz-progress-fill" id="viz-progress-fill"></div>
+              </div>
+              <div class="viz-time" id="viz-time">0:00 / 0:00</div>
+            </div>
           </div>
+          <!-- 控制面板 -->
           <div class="viz-controls">
-            <span class="viz-knob"></span>
-            <span class="viz-knob"></span>
-            <button class="viz-play-btn" aria-label="播放演示">▶</button>
-            <span class="viz-knob"></span>
-            <span class="viz-knob"></span>
+            <button class="viz-btn" data-action="prev" aria-label="上一首">⏮</button>
+            <button class="viz-btn" data-action="rewind" aria-label="快退10秒">⏪</button>
+            <button class="viz-play-btn" id="viz-play-btn" aria-label="播放">▶</button>
+            <button class="viz-btn" data-action="forward" aria-label="快进10秒">⏩</button>
+            <button class="viz-btn" data-action="next" aria-label="下一首">⏭</button>
           </div>
         </div>
       </div>
@@ -1017,6 +1050,168 @@
       player._audio = audio;
       player._playing = playing;
     });
+
+    // ── Hero Player (Interactive Recorder) ──
+    (() => {
+      const TRACKS = [
+        { name: 'Midnight Masquerade', src: 'audio/Midnight_Masquerade.mp3', genre: '电子音乐' },
+        { name: 'Chilling',              src: 'audio/Chilling.mp3',              genre: 'AI辅助创作' },
+      ];
+
+      let currentIdx  = -1;   // -1 = 未开始
+      let audio       = null;
+      let playing     = false;
+      let animFrame   = null;
+
+      /* DOM */
+      const btnPlay     = document.getElementById('viz-play-btn');
+      const elName      = document.getElementById('viz-track-name');
+      const elStatus    = document.querySelector('.viz-status');
+      const elTime      = document.getElementById('viz-time');
+      const elFill      = document.getElementById('viz-progress-fill');
+      const elBars      = document.getElementById('viz-bars');
+      const buttons     = document.querySelectorAll('.viz-btn');
+
+      /* ── helpers ── */
+      const fmt = s => {
+        if (!s || isNaN(s)) return '0:00';
+        const m = Math.floor(s / 60);
+        const sec = Math.floor(s % 60);
+        return m + ':' + String(sec).padStart(2, '0');
+      };
+
+      const pickRandom = () => {
+        let next;
+        do { next = Math.floor(Math.random() * TRACKS.length); } while (next === currentIdx && TRACKS.length > 1);
+        return next;
+      };
+
+      /* ── load & play ── */
+      const loadTrack = idx => {
+        if (idx < 0 || idx >= TRACKS.length) return;
+        currentIdx = idx;
+        const track = TRACKS[idx];
+
+        /* 停止旧音频 */
+        if (audio) { audio.pause(); audio.currentTime = 0; }
+
+        audio = new Audio(track.src);
+        audio.volume = 0.75;
+
+        elName.textContent = track.name;
+        elStatus.textContent = '已加载';
+        elTime.textContent = '0:00 / 0:00';
+        elFill.style.width = '0%';
+
+        audio.addEventListener('loadedmetadata', () => {
+          elTime.textContent = '0:00 / ' + fmt(audio.duration);
+        });
+
+        audio.addEventListener('timeupdate', () => {
+          if (!audio.duration) return;
+          const pct = (audio.currentTime / audio.duration * 100).toFixed(1);
+          elFill.style.width = pct + '%';
+          elTime.textContent = fmt(audio.currentTime) + ' / ' + fmt(audio.duration);
+        });
+
+        audio.addEventListener('ended', () => {
+          playing = false;
+          updatePlayBtn();
+          stopVizBars();
+          /* 自动下一首（随机）*/
+          loadTrack(pickRandom());
+          playTrack();
+        });
+      };
+
+      const playTrack = () => {
+        if (!audio) { loadTrack(pickRandom()); }
+        audio.play().then(() => {
+          playing = true;
+          updatePlayBtn();
+          elStatus.textContent = '播放中';
+          startVizBars();
+        }).catch(() => { /* 用户未交互，忽略 */ });
+      };
+
+      const pauseTrack = () => {
+        if (!audio) return;
+        audio.pause();
+        playing = false;
+        updatePlayBtn();
+        elStatus.textContent = '已暂停';
+        stopVizBars();
+      };
+
+      const updatePlayBtn = () => {
+        btnPlay.textContent = playing ? '⏸' : '▶';
+        btnPlay.classList.toggle('playing', playing);
+      };
+
+      /* ── 快进 / 快退 ── */
+      const rewind10 = () => {
+        if (!audio) return;
+        audio.currentTime = Math.max(0, audio.currentTime - 10);
+      };
+      const forward10 = () => {
+        if (!audio) return;
+        audio.currentTime = Math.min(audio.duration || Infinity, audio.currentTime + 10);
+      };
+
+      /* ── 上一首 / 下一首 ── */
+      const prevTrack = () => {
+        const wasPlaying = playing;
+        if (wasPlaying) pauseTrack();
+        loadTrack(pickRandom());   /* 随机切换 */
+        if (wasPlaying) playTrack();
+      };
+      const nextTrack = () => {
+        const wasPlaying = playing;
+        if (wasPlaying) pauseTrack();
+        loadTrack(pickRandom());
+        if (wasPlaying) playTrack();
+      };
+
+      /* ── 可视化柱状图动画 ── */
+      const startVizBars = () => {
+        elBars.classList.add('active');
+        const bars = elBars.querySelectorAll('.viz-bar');
+        const step = () => {
+          bars.forEach(bar => {
+            const h = 20 + Math.random() * 80;
+            bar.style.transform = 'scaleY(' + (h / 100) + ')';
+          });
+          animFrame = requestAnimationFrame(() => setTimeout(step, 120));
+        };
+        step();
+      };
+
+      const stopVizBars = () => {
+        if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+        elBars.classList.remove('active');
+        const bars = elBars.querySelectorAll('.viz-bar');
+        bars.forEach(bar => { bar.style.transform = 'scaleY(0.35)'; });
+      };
+
+      /* ── 按钮事件 ── */
+      btnPlay.addEventListener('click', () => {
+        if (playing) { pauseTrack(); }
+        else        { playTrack(); }
+      });
+
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const action = btn.dataset.action;
+          if (action === 'prev')     prevTrack();
+          if (action === 'next')     nextTrack();
+          if (action === 'rewind')  rewind10();
+          if (action === 'forward')  forward10();
+        });
+      });
+
+      /* 页面加载后预加载第一首（不自动播放）*/
+      loadTrack(0);
+    })();
 
     // ── Cursor Tilt Effect on Project Cards ──
     document.querySelectorAll('[data-tilt]').forEach(card => {
