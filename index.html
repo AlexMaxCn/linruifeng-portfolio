@@ -980,102 +980,81 @@
       });
     });
 
-    // ── Custom Audio Player ──
-    document.querySelectorAll('.audio-player').forEach(player => {
-      const btn = player.querySelector('.play-btn');
-      const fill = player.querySelector('.progress-fill');
-      const thumb = player.querySelector('.progress-thumb');
-      const timeEl = player.querySelector('.time-display');
-      const wrap = player.querySelector('.progress-wrap');
-      const src = player.dataset.src;
-      const audio = new Audio(src);
-      let playing = false;
+    // ── Shared Audio Player (全局单例) ──
+    // 所有播放器共用一个 Audio 对象，统一状态管理，UI 通过回调同步
+    window.__sharedPlayer = {
+      audio: new Audio(),
+      currentTrack: null,  // { name, src, genre }
+      isPlaying: false,
+      source: null,         // 'hero' | 'music'
+      uiCallbacks: [],
 
-      audio.preload = 'metadata';
+      init() {
+        this.audio.preload = 'metadata';
 
-      const fmt = s => {
-        if (!s || isNaN(s)) return '0:00';
-        const m = Math.floor(s / 60);
-        const sec = Math.floor(s % 60);
-        return m + ':' + (sec < 10 ? '0' : '') + sec;
-      };
+        this.audio.addEventListener('timeupdate', () => {
+          this.notifyUI('timeupdate');
+        });
 
-      audio.addEventListener('loadedmetadata', () => {
-        timeEl.textContent = '0:00 / ' + fmt(audio.duration);
-      });
+        this.audio.addEventListener('ended', () => {
+          this.isPlaying = false;
+          this.notifyUI('ended');
+        });
 
-      audio.addEventListener('timeupdate', () => {
-        if (!audio.duration) return;
-        const pct = (audio.currentTime / audio.duration) * 100;
-        fill.style.width = pct + '%';
-        thumb.style.left = pct + '%';
-        timeEl.textContent = fmt(audio.currentTime) + ' / ' + fmt(audio.duration);
-      });
+        this.audio.addEventListener('loadedmetadata', () => {
+          this.notifyUI('loadedmetadata');
+        });
+      },
 
-      audio.addEventListener('ended', () => {
-        playing = false;
-        btn.textContent = '▶';
-        btn.classList.remove('playing');
-        fill.style.width = '0%';
-        thumb.style.left = '0%';
-      });
+      registerUI(callback) {
+        this.uiCallbacks.push(callback);
+      },
 
-      btn.addEventListener('click', () => {
-        if (playing) {
-          audio.pause();
-          playing = false;
-          btn.textContent = '▶';
-          btn.classList.remove('playing');
-        } else {
-          /* 双向联动：播放前暂停 Hero 播放器 */
-          if (window.__pauseHeroPlayer) window.__pauseHeroPlayer();
+      notifyUI(event) {
+        this.uiCallbacks.forEach(cb => cb(this, event));
+      },
 
-          document.querySelectorAll('.audio-player').forEach(p => {
-            if (p !== player) {
-              const a = p._audio;
-              if (a) { a.pause(); p._playing = false; p.querySelector('.play-btn').textContent = '▶'; p.querySelector('.play-btn').classList.remove('playing'); }
-            }
-          });
-          audio.play();
-          playing = true;
-          btn.textContent = '⏸';
-          btn.classList.add('playing');
+      play(track, source) {
+        // 如果正在播放，先暂停（不会触发 ended）
+        if (this.isPlaying) {
+          this.audio.pause();
         }
-      });
 
-      wrap.addEventListener('click', e => {
-        if (!audio.duration) return;
-        const rect = wrap.getBoundingClientRect();
-        const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-        audio.currentTime = pct * audio.duration;
-      });
+        // 如果曲目不同，加载新源
+        if (!this.currentTrack || this.currentTrack.src !== track.src) {
+          this.audio.src = track.src;
+          this.currentTrack = track;
+        }
 
-      player._audio = audio;
-      player._playing = playing;
-    });
+        this.source = source;
+        this.audio.play().then(() => {
+          this.isPlaying = true;
+          this.notifyUI('play');
+        }).catch(() => { /* 用户尚未与页面交互，静默忽略 */ });
+      },
 
-    // ── Hero Player (Interactive Recorder) ──
-    (() => {
-      const TRACKS = [
-        { name: 'Midnight Masquerade', src: 'audio/Midnight_Masquerade.mp3', genre: '电子音乐' },
-        { name: 'Chilling',              src: 'audio/Chilling.mp3',              genre: 'AI辅助创作' },
-      ];
+      pause() {
+        this.audio.pause();
+        this.isPlaying = false;
+        this.notifyUI('pause');
+      }
+    };
 
-      let currentIdx  = -1;   // -1 = 未开始
-      let audio       = null;
-      let playing     = false;
-      let animFrame   = null;
+    window.__sharedPlayer.init();
 
-      /* DOM */
-      const btnPlay     = document.getElementById('viz-play-btn');
-      const elName      = document.getElementById('viz-track-name');
-      const elStatus    = document.querySelector('.viz-status');
-      const elTime      = document.getElementById('viz-time');
-      const elFill      = document.getElementById('viz-progress-fill');
-      const elBars      = document.getElementById('viz-bars');
-      const buttons     = document.querySelectorAll('.viz-btn');
+    // ── Custom Audio Player (Music 区域，使用共享 Audio) ──
+    document.querySelectorAll('.audio-player').forEach(player => {
+      const btn     = player.querySelector('.play-btn');
+      const fill    = player.querySelector('.progress-fill');
+      const thumb   = player.querySelector('.progress-thumb');
+      const timeEl  = player.querySelector('.time-display');
+      const wrap    = player.querySelector('.progress-wrap');
+      const src     = player.dataset.src;
+      const trackName = player.querySelector('.track-name').textContent;
 
-      /* ── helpers ── */
+      const sp  = window.__sharedPlayer;
+      let lastPct = -1;  // 节流，避免频繁 DOM 写入
+
       const fmt = s => {
         if (!s || isNaN(s)) return '0:00';
         const m = Math.floor(s / 60);
@@ -1083,111 +1062,95 @@
         return m + ':' + String(sec).padStart(2, '0');
       };
 
+      /* ── 注册 UI 回调：当共享播放器状态变化时更新此播放器 UI ── */
+      sp.registerUI((player, event) => {
+        if (!player.currentTrack || player.currentTrack.src !== src) {
+          // 当前播放的不是这首，重置 UI 为未播放状态
+          fill.style.width   = '0%';
+          thumb.style.left   = '0%';
+          btn.textContent   = '▶';
+          btn.classList.remove('playing');
+          timeEl.textContent = '0:00 / 0:00';
+          return;
+        }
+
+        // 当前播放的就是这首 → 同步进度和按钮状态
+        if (player.audio.duration) {
+          const pct = (player.audio.currentTime / player.audio.duration) * 100;
+          // 节流：仅当变化超过 0.5% 才更新 DOM
+          if (Math.abs(pct - lastPct) > 0.5 || pct < 1 || pct > 99) {
+            fill.style.width = pct + '%';
+            thumb.style.left = pct + '%';
+            lastPct = pct;
+          }
+          timeEl.textContent = fmt(player.audio.currentTime) + ' / ' + fmt(player.audio.duration);
+        }
+
+        btn.textContent = player.isPlaying ? '⏸' : '▶';
+        btn.classList.toggle('playing', player.isPlaying);
+      });
+
+      /* ── 播放 / 暂停按钮 ── */
+      btn.addEventListener('click', () => {
+        const track = { name: trackName, src: src };
+
+        if (sp.isPlaying && sp.currentTrack && sp.currentTrack.src === src) {
+          // 正在播放这首 → 暂停
+          sp.pause();
+        } else {
+          // 播放这首（自动暂停当前）
+          sp.play(track, 'music');
+        }
+      });
+
+      /* ── 进度条点击跳转 ── */
+      wrap.addEventListener('click', e => {
+        if (!sp.currentTrack || sp.currentTrack.src !== src) return;
+        if (!sp.audio.duration) return;
+        const rect = wrap.getBoundingClientRect();
+        const pct  = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        sp.audio.currentTime = pct * sp.audio.duration;
+      });
+    });
+
+    // ── Hero Player (Interactive Recorder, 使用共享 Audio) ──
+    (() => {
+      const TRACKS = [
+        { name: 'Midnight Masquerade', src: 'audio/Midnight_Masquerade.mp3', genre: '电子音乐' },
+        { name: 'Chilling',              src: 'audio/Chilling.mp3',              genre: 'AI辅助创作' },
+      ];
+
+      let currentIdx = -1;
+
+      /* DOM */
+      const btnPlay  = document.getElementById('viz-play-btn');
+      const elName   = document.getElementById('viz-track-name');
+      const elStatus = document.querySelector('.viz-status');
+      const elTime   = document.getElementById('viz-time');
+      const elFill   = document.getElementById('viz-progress-fill');
+      const elBars   = document.getElementById('viz-bars');
+      const buttons  = document.querySelectorAll('.viz-btn');
+
+      const sp = window.__sharedPlayer;
+
+      /* ── helpers ── */
+      const fmt = s => {
+        if (!s || isNaN(s)) return '0:00';
+        const m   = Math.floor(s / 60);
+        const sec = Math.floor(s % 60);
+        return m + ':' + String(sec).padStart(2, '0');
+      };
+
       const pickRandom = () => {
         let next;
-        do { next = Math.floor(Math.random() * TRACKS.length); } while (next === currentIdx && TRACKS.length > 1);
+        do { next = Math.floor(Math.random() * TRACKS.length); }
+        while (next === currentIdx && TRACKS.length > 1);
         return next;
       };
 
-      /* ── load & play ── */
-      const loadTrack = idx => {
-        if (idx < 0 || idx >= TRACKS.length) return;
-        currentIdx = idx;
-        const track = TRACKS[idx];
-
-        /* 停止旧音频 */
-        if (audio) { audio.pause(); audio.currentTime = 0; }
-
-        audio = new Audio(track.src);
-        audio.volume = 0.75;
-
-        elName.textContent = track.name;
-        elStatus.textContent = '已加载';
-        elTime.textContent = '0:00 / 0:00';
-        elFill.style.width = '0%';
-
-        audio.addEventListener('loadedmetadata', () => {
-          elTime.textContent = '0:00 / ' + fmt(audio.duration);
-        });
-
-        audio.addEventListener('timeupdate', () => {
-          if (!audio.duration) return;
-          const pct = (audio.currentTime / audio.duration * 100).toFixed(1);
-          elFill.style.width = pct + '%';
-          elTime.textContent = fmt(audio.currentTime) + ' / ' + fmt(audio.duration);
-        });
-
-        audio.addEventListener('ended', () => {
-          playing = false;
-          updatePlayBtn();
-          stopVizBars();
-          /* 自动下一首（随机）*/
-          loadTrack(pickRandom());
-          playTrack();
-        });
-      };
-
-      const playTrack = () => {
-        if (!audio) { loadTrack(pickRandom()); }
-
-        /* 双向联动：播放前暂停 Music 区域所有播放器 */
-        document.querySelectorAll('.audio-player').forEach(p => {
-          const a = p._audio;
-          if (a && p._playing) {
-            a.pause();
-            p._playing = false;
-            const b = p.querySelector('.play-btn');
-            if (b) { b.textContent = '▶'; b.classList.remove('playing'); }
-          }
-        });
-
-        audio.play().then(() => {
-          playing = true;
-          updatePlayBtn();
-          elStatus.textContent = '播放中';
-          startVizBars();
-        }).catch(() => { /* 用户未交互，忽略 */ });
-      };
-
-      const pauseTrack = () => {
-        if (!audio) return;
-        audio.pause();
-        playing = false;
-        updatePlayBtn();
-        elStatus.textContent = '已暂停';
-        stopVizBars();
-      };
-
-      const updatePlayBtn = () => {
-        btnPlay.textContent = playing ? '⏸' : '▶';
-        btnPlay.classList.toggle('playing', playing);
-      };
-
-      /* ── 快进 / 快退 ── */
-      const rewind10 = () => {
-        if (!audio) return;
-        audio.currentTime = Math.max(0, audio.currentTime - 10);
-      };
-      const forward10 = () => {
-        if (!audio) return;
-        audio.currentTime = Math.min(audio.duration || Infinity, audio.currentTime + 10);
-      };
-
-      /* ── 上一首 / 下一首 ── */
-      const prevTrack = () => {
-        const wasPlaying = playing;
-        if (wasPlaying) pauseTrack();
-        loadTrack(pickRandom());   /* 随机切换 */
-        if (wasPlaying) playTrack();
-      };
-      const nextTrack = () => {
-        const wasPlaying = playing;
-        if (wasPlaying) pauseTrack();
-        loadTrack(pickRandom());
-        if (wasPlaying) playTrack();
-      };
-
       /* ── 可视化柱状图动画 ── */
+      let animFrame = null;
+
       const startVizBars = () => {
         elBars.classList.add('active');
         const bars = elBars.querySelectorAll('.viz-bar');
@@ -1198,37 +1161,93 @@
           });
           animFrame = requestAnimationFrame(() => setTimeout(step, 120));
         };
-        step();
+        if (!animFrame) step();
       };
 
       const stopVizBars = () => {
         if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
         elBars.classList.remove('active');
-        const bars = elBars.querySelectorAll('.viz-bar');
-        bars.forEach(bar => { bar.style.transform = 'scaleY(0.35)'; });
+        elBars.querySelectorAll('.viz-bar').forEach(b => { b.style.transform = 'scaleY(0.35)'; });
       };
 
-      /* ── 按钮事件 ── */
-      btnPlay.addEventListener('click', () => {
-        if (playing) { pauseTrack(); }
-        else        { playTrack(); }
+      /* ── 注册 UI 回调：Hero 区域始终同步共享播放器状态 ── */
+      sp.registerUI((player, event) => {
+        const track = player.currentTrack;
+        if (!track) return;
+
+        // 无论播放源是 hero 还是 music，都在 Hero 区显示当前曲目信息
+        elName.textContent = track.name;
+
+        if (player.audio.duration) {
+          const pct = (player.audio.currentTime / player.audio.duration) * 100;
+          elFill.style.width = pct.toFixed(1) + '%';
+          elTime.textContent = fmt(player.audio.currentTime) + ' / ' + fmt(player.audio.duration);
+        }
+
+        btnPlay.textContent = player.isPlaying ? '⏸' : '▶';
+        btnPlay.classList.toggle('playing', player.isPlaying);
+
+        elStatus.textContent = player.isPlaying ? '播放中' : '已暂停';
+
+        if (player.isPlaying) { startVizBars(); }
+        else                   { stopVizBars();  }
       });
 
+      /* ── 加载曲目（仅设置 currentIdx，不创建 Audio）── */
+      const loadTrack = idx => {
+        if (idx < 0 || idx >= TRACKS.length) return;
+        currentIdx = idx;
+      };
+
+      /* ── Hero 播放 / 暂停（主按钮）├── */
+      btnPlay.addEventListener('click', () => {
+        if (sp.isPlaying && sp.source === 'hero') {
+          // Hero 正在播放 → 暂停
+          sp.pause();
+        } else {
+          // 播放 Hero 当前曲目（自动暂停其他）
+          const track = TRACKS[currentIdx === -1 ? 0 : currentIdx];
+          sp.play(track, 'hero');
+        }
+      });
+
+      /* ── 左右功能按钮 ── */
       buttons.forEach(btn => {
         btn.addEventListener('click', () => {
           const action = btn.dataset.action;
-          if (action === 'prev')     prevTrack();
-          if (action === 'next')     nextTrack();
-          if (action === 'rewind')  rewind10();
-          if (action === 'forward')  forward10();
+          if (action === 'prev') {
+            const idx = pickRandom();
+            loadTrack(idx);
+            // 如果当前正在通过 Hero 播放，立即切换曲目
+            if (sp.isPlaying && sp.source === 'hero') {
+              sp.play(TRACKS[idx], 'hero');
+            }
+          }
+          if (action === 'next') {
+            const idx = pickRandom();
+            loadTrack(idx);
+            if (sp.isPlaying && sp.source === 'hero') {
+              sp.play(TRACKS[idx], 'hero');
+            }
+          }
+          if (action === 'rewind') {
+            sp.audio.currentTime = Math.max(0, sp.audio.currentTime - 10);
+          }
+          if (action === 'forward') {
+            sp.audio.currentTime = Math.min(sp.audio.duration || Infinity, sp.audio.currentTime + 10);
+          }
         });
       });
 
-      /* 页面加载后预加载第一首（不自动播放）*/
+      /* 页面加载后设置默认曲目（不自动播放）*/
       loadTrack(0);
 
-      /* 暴露暂停函数，供 Music 区域播放器调用（双向联动）*/
-      window.__pauseHeroPlayer = pauseTrack;
+      /* 暴露暂停函数，供外部调用 */
+      window.__pauseHeroPlayer = () => {
+        if (sp.isPlaying && sp.source === 'hero') {
+          sp.pause();
+        }
+      };
     })();
 
     // ── Cursor Tilt Effect on Project Cards ──
@@ -1240,14 +1259,12 @@
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
 
-        /* Tilt: max ±6deg */
         const rotateX = ((y - centerY) / centerY) * -6;
         const rotateY = ((x - centerX) / centerX) * 6;
 
         card.style.transform =
           `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02,1.02,1.02)`;
 
-        /* Spotlight: CSS custom property for radial-gradient position */
         const pctX = (x / rect.width) * 100;
         const pctY = (y / rect.height) * 100;
         card.style.setProperty('--mouse-x', pctX + '%');
