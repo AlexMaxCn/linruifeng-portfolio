@@ -474,6 +474,10 @@
           <div class="field"><label>CTA 描述</label><textarea id="p-cta-desc" rows="2"></textarea></div>
         </div>
         <div class="card">
+          <div class="card-title">音乐区块</div>
+          <div class="field"><label>音乐区块描述</label><textarea id="p-music-lead" rows="2"></textarea></div>
+        </div>
+        <div class="card">
           <div class="card-title">Hero 数据统计</div>
           <div id="hero-stats-editor"></div>
           <button class="btn-add" onclick="addHeroStat()">+ 添加统计数字</button>
@@ -1009,6 +1013,7 @@ function renderProfileForm() {
   document.getElementById('p-about-lead').value = p.about_lead || '';
   document.getElementById('p-cta-title').value = p.cta_title || '';
   document.getElementById('p-cta-desc').value = p.cta_desc || '';
+  document.getElementById('p-music-lead').value = p.music_section_lead || '';
   renderHeroStatsEditor();
   renderStrengthsEditor();
 }
@@ -1085,6 +1090,7 @@ async function saveProfile() {
   state.profile.about_lead = document.getElementById('p-about-lead').value;
   state.profile.cta_title = document.getElementById('p-cta-title').value;
   state.profile.cta_desc = document.getElementById('p-cta-desc').value;
+  state.profile.music_section_lead = document.getElementById('p-music-lead').value;
   const r1 = await saveToGitHub('profile.json', state.profile, false);
   const r2 = await saveToGitHub('strengths.json', state.strengths, false);
   if (r1 && r2) {
