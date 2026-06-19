@@ -526,11 +526,13 @@
             <input id="gh-token" type="password" placeholder="ghp_xxxxxxxxxxxx">
             <div class="field-hint">需要 <code style="background:var(--surface2);padding:2px 6px;border-radius:4px">repo</code> 权限。Token 存储在浏览器本地，不会发送给第三方。</div>
           </div>
-          <div style="display:flex;gap:10px;align-items:center;margin-top:12px">
+          <div style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap">
             <button class="btn-save" onclick="saveToken()">保存 Token</button>
             <button class="btn-outline" onclick="testToken()" style="font-size:13px;padding:8px 14px">测试连接</button>
+            <button class="btn-outline" onclick="triggerBuild()" style="font-size:13px;padding:8px 14px;border-color:var(--accent);color:var(--accent)">🚀 触发构建</button>
             <span id="token-status" style="font-size:13px;color:var(--muted)"></span>
           </div>
+          <div id="build-status" style="font-size:13px;margin-top:8px;display:none"></div>
         </div>
         <div class="card">
           <div class="card-title" style="color:var(--danger)">危险操作</div>
@@ -675,6 +677,38 @@ function updateTokenStatus() {
   }
 }
 
+// ══ Trigger GitHub Pages Build ═══════════════════════
+async function triggerBuild() {
+  const token = getToken();
+  if (!token) { showToast('请先配置 Token', true); return; }
+  const bs = document.getElementById('build-status');
+  bs.style.display = 'block';
+  bs.style.color = 'var(--muted)';
+  bs.textContent = '⏳ 正在触发构建...';
+  try {
+    const r = await fetch(
+      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/pages/builds`,
+      {
+        method: 'POST',
+        headers: { Authorization: `token ${token}` },
+      }
+    );
+    if (r.ok || r.status === 201) {
+      bs.style.color = 'var(--success)';
+      bs.textContent = '✅ 构建已触发，请等待 1-2 分钟...';
+    } else if (r.status === 429) {
+      bs.style.color = 'var(--accent-2)';
+      bs.textContent = '⚠️ 触发过于频繁（每分钟限 1 次），请稍后再试';
+    } else {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP ${r.status}`);
+    }
+  } catch (e) {
+    bs.style.color = 'var(--danger)';
+    bs.textContent = `❌ 触发失败：${e.message}`;
+  }
+}
+
 // ══ Base64 encode (handles Unicode) ═════════════════════════
 function base64Encode(str) {
   return btoa(unescape(encodeURIComponent(str)));
@@ -740,7 +774,10 @@ async function saveToGitHub(filename, data, showToastMsg = true) {
   try {
     const sha = await fetchSha();
     await doPut(sha, 1);
-    if (showToastMsg) showToast(`✅ ${filename} 已保存到 GitHub，稍等片刻前台将自动更新`);
+    if (showToastMsg) {
+      showToast(`✅ ${filename} 已保存到 GitHub，正在触发构建...`);
+      try { await triggerBuild(); } catch(e) {}
+    }
     return true;
   } catch (e) {
     showToast(`❌ 保存失败：${e.message}`, true);
@@ -875,8 +912,10 @@ async function saveProfile() {
   state.profile.cta_desc = document.getElementById('p-cta-desc').value;
   const r1 = await saveToGitHub('profile.json', state.profile, false);
   const r2 = await saveToGitHub('strengths.json', state.strengths, false);
-  if (r1 && r2) showToast('✅ 个人信息已保存到 GitHub，稍等片刻前台将自动更新');
-  else showToast('❌ 部分文件保存失败，请检查 Token 权限', true);
+  if (r1 && r2) {
+    showToast('✅ 个人信息已保存，正在触发构建...');
+    try { await triggerBuild(); } catch(e) {}
+  } else showToast('❌ 部分文件保存失败，请检查 Token 权限', true);
 }
 
 // ══ Projects ═════════════════════════════════════════════
