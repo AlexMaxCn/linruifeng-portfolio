@@ -397,9 +397,10 @@
         <div class="card">
           <div class="card-title">使用说明</div>
           <div style="color:var(--muted);font-size:14px;line-height:1.9">
-            <p>⚡ 本系统使用 <strong style="color:var(--text)">本地 JSON 文件</strong> 存储数据，修改后点击「保存」按钮即可更新前台内容。</p>
-            <p style="margin-top:8px">🎵 音频文件请手动放入 <code style="background:var(--surface2);padding:2px 6px;border-radius:4px">音频文件以及主页链接/</code> 目录，然后在音乐管理中填写文件路径。</p>
-            <p style="margin-top:8px">🌐 部署上线后，可将 JSON 文件迁移到 Supabase 实现真正的在线后台管理。</p>
+            <p>✅ 本系统现已支持 <strong style="color:var(--text)">GitHub API 直写</strong>，配置 Token 后点击保存即可直接更新线上数据，无需手动操作。</p>
+            <p style="margin-top:8px">🔑 首次使用请在「系统设置」中配置 <strong style="color:var(--accent)">GitHub Personal Access Token</strong>（需要 <code style="background:var(--surface2);padding:2px 6px;border-radius:4px">repo</code> 权限）。</p>
+            <p style="margin-top:8px">🎵 音频文件仍需手动上传到 <code style="background:var(--surface2);padding:2px 6px;border-radius:4px">音频文件以及主页链接/</code> 目录，或通过 GitHub 上传。</p>
+            <p style="margin-top:8px">🌐 保存后 GitHub Pages 会自动重新构建（约 1-2 分钟），刷新前台即可看到更新。</p>
           </div>
         </div>
       </div>
@@ -519,6 +520,19 @@
           <button class="btn-save" onclick="savePwd()">修改密码</button>
         </div>
         <div class="card">
+          <div class="card-title">GitHub 同步配置</div>
+          <div class="field">
+            <label>GitHub Personal Access Token</label>
+            <input id="gh-token" type="password" placeholder="ghp_xxxxxxxxxxxx">
+            <div class="field-hint">需要 <code style="background:var(--surface2);padding:2px 6px;border-radius:4px">repo</code> 权限。Token 存储在浏览器本地，不会发送给第三方。</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;margin-top:12px">
+            <button class="btn-save" onclick="saveToken()">保存 Token</button>
+            <button class="btn-outline" onclick="testToken()" style="font-size:13px;padding:8px 14px">测试连接</button>
+            <span id="token-status" style="font-size:13px;color:var(--muted)"></span>
+          </div>
+        </div>
+        <div class="card">
           <div class="card-title" style="color:var(--danger)">危险操作</div>
           <p style="font-size:14px;color:var(--muted);margin-bottom:14px">以下操作不可撤销，请谨慎使用。</p>
           <button class="btn-outline" style="border-color:var(--danger);color:var(--danger)" onclick="if(confirm('确认退出登录？'))logout()">退出登录</button>
@@ -571,6 +585,7 @@ function doLogin() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     loadAll();
+    updateTokenStatus();
   } else {
     document.getElementById('login-err').style.display = 'block';
   }
@@ -618,16 +633,114 @@ async function loadAll() {
   }
 }
 
-// ══ Save (演示版 — 下载 JSON) ════════════════════════════
-function downloadJSON(filename, data) {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = filename; a.click();
-  URL.revokeObjectURL(url);
+// ══ GitHub Config ═══════════════════════════════════════
+const GH_OWNER = 'AlexMaxCn';
+const GH_REPO  = 'linruifeng-portfolio';
+const GH_BRANCH = 'main';
+
+function getToken() { return localStorage.getItem('gh_token') || ''; }
+function saveToken() {
+  const v = document.getElementById('gh-token').value.trim();
+  if (!v) { showToast('请输入 Token', true); return; }
+  localStorage.setItem('gh_token', v);
+  showToast('Token 已保存（存储在浏览器本地）');
+  document.getElementById('gh-token').value = '';
+  updateTokenStatus();
 }
-function showSaveHint(filename) {
-  showToast(`已下载 ${filename}，请替换 data/ 目录中的同名文件`);
+async function testToken() {
+  const token = getToken();
+  if (!token) { showToast('请先保存 Token', true); return; }
+  try {
+    const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}`, {
+      headers: { Authorization: `token ${token}` }
+    });
+    if (r.ok) {
+      const data = await r.json();
+      document.getElementById('token-status').textContent = `✅ 已连接 → ${data.full_name}`;
+      document.getElementById('token-status').style.color = 'var(--success)';
+    } else {
+      document.getElementById('token-status').textContent = `❌ Token 无效（${r.status}）`;
+      document.getElementById('token-status').style.color = 'var(--danger)';
+    }
+  } catch(e) {
+    document.getElementById('token-status').textContent = `❌ 网络错误：${e.message}`;
+    document.getElementById('token-status').style.color = 'var(--danger)';
+  }
+}
+function updateTokenStatus() {
+  const token = getToken();
+  if (token) {
+    document.getElementById('token-status').textContent = '⚡ Token 已保存，点击「测试连接」验证';
+    document.getElementById('token-status').style.color = 'var(--accent)';
+  }
+}
+
+// ══ Base64 encode (handles Unicode) ═════════════════════════
+function base64Encode(str) {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+
+// ══ Save to GitHub ═══════════════════════════════════════
+async function saveToGitHub(filename, data, showToastMsg = true) {
+  const token = getToken();
+  if (!token) {
+    showToast('请先在「系统设置」中配置 GitHub Token', true);
+    switchPage('settings', document.querySelectorAll('.nav-item')[7]);
+    return false;
+  }
+
+  const path = `data/${filename}`;
+  const content = JSON.stringify(data, null, 2);
+  const encoded = base64Encode(content);
+
+  try {
+    /* 1. 获取当前文件的 sha */
+    const getResp = await fetch(
+      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}`,
+      { headers: { Authorization: `token ${token}` } }
+    );
+    let sha;
+    if (getResp.ok) {
+      const getData = await getResp.json();
+      sha = getData.sha;
+    } else if (getResp.status === 404) {
+      /* 文件不存在，新建 */
+      sha = undefined;
+    } else {
+      throw new Error(`获取文件失败：${getResp.status}`);
+    }
+
+    /* 2. 提交文件 */
+    const putBody = {
+      message: `Update ${filename} via admin panel`,
+      content: encoded,
+      branch: GH_BRANCH,
+    };
+    if (sha) putBody.sha = sha;
+
+    const putResp = await fetch(
+      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: `token ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(putBody),
+      }
+    );
+
+    if (!putResp.ok) {
+      const err = await putResp.json();
+      throw new Error(err.message || `提交失败：${putResp.status}`);
+    }
+
+    if (showToastMsg) showToast(`✅ ${filename} 已保存到 GitHub，稍等片刻前台将自动更新`);
+    return true;
+  } catch (e) {
+    showToast(`❌ 保存失败：${e.message}`, true);
+    return false;
+  }
 }
 
 // ══ Toast ════════════════════════════════════════════════
@@ -737,7 +850,7 @@ function collectStrengths() {
   state.strengths = Array.from(titles).map((t,i)=>({ ...state.strengths[i], title: t.value, desc: descs[i].value }));
 }
 
-function saveProfile() {
+async function saveProfile() {
   // Collect form values
   collectHeroStats();
   collectStrengths();
@@ -755,9 +868,10 @@ function saveProfile() {
   state.profile.about_lead = document.getElementById('p-about-lead').value;
   state.profile.cta_title = document.getElementById('p-cta-title').value;
   state.profile.cta_desc = document.getElementById('p-cta-desc').value;
-  downloadJSON('profile.json', state.profile);
-  downloadJSON('strengths.json', state.strengths);
-  showToast('已下载 profile.json 和 strengths.json，请替换 data/ 目录中对应文件');
+  const r1 = await saveToGitHub('profile.json', state.profile, false);
+  const r2 = await saveToGitHub('strengths.json', state.strengths, false);
+  if (r1 && r2) showToast('✅ 个人信息已保存到 GitHub，稍等片刻前台将自动更新');
+  else showToast('❌ 部分文件保存失败，请检查 Token 权限', true);
 }
 
 // ══ Projects ═════════════════════════════════════════════
@@ -811,34 +925,31 @@ function collectProjectModal(p) {
   p.bullets = document.getElementById('mf-bullets').value.split('\n').filter(Boolean);
   return p;
 }
-function openNewProject() {
+async function openNewProject() {
   switchPage('projects', document.querySelectorAll('.nav-item')[4]);
   editingIndex = -1;
-  openModal('新建项目', projectModalHTML({}), () => {
+  openModal('新建项目', projectModalHTML({}), async () => {
     const p = collectProjectModal({ id: Date.now() });
     state.projects.push(p);
     renderProjectsList();
-    downloadJSON('projects.json', state.projects);
-    showToast('项目已添加，请替换 data/projects.json');
+    await saveToGitHub('projects.json', state.projects);
     closeModal();
   });
 }
-function editProject(i) {
+async function editProject(i) {
   editingIndex = i;
-  openModal('编辑项目', projectModalHTML(state.projects[i]), () => {
+  openModal('编辑项目', projectModalHTML(state.projects[i]), async () => {
     state.projects[i] = collectProjectModal({...state.projects[i]});
     renderProjectsList();
-    downloadJSON('projects.json', state.projects);
-    showToast('项目已更新，请替换 data/projects.json');
+    await saveToGitHub('projects.json', state.projects);
     closeModal();
   });
 }
-function deleteProject(i) {
+async function deleteProject(i) {
   if (!confirm(`确认删除「${state.projects[i].title}」？`)) return;
   state.projects.splice(i, 1);
   renderProjectsList();
-  downloadJSON('projects.json', state.projects);
-  showToast('项目已删除，请替换 data/projects.json');
+  await saveToGitHub('projects.json', state.projects);
 }
 
 // ══ Skills ═══════════════════════════════════════════════
@@ -872,30 +983,27 @@ function collectSkillModal(s) {
   s.items = document.getElementById('sf-items').value.split(',').map(v=>v.trim()).filter(Boolean);
   return s;
 }
-function openNewSkill() {
-  openModal('新建技能分类', skillModalHTML({}), () => {
+async function openNewSkill() {
+  openModal('新建技能分类', skillModalHTML({}), async () => {
     state.skills.push(collectSkillModal({ id: Date.now() }));
     renderSkillsList();
-    downloadJSON('skills.json', state.skills);
-    showToast('技能分类已添加，请替换 data/skills.json');
+    await saveToGitHub('skills.json', state.skills);
     closeModal();
   });
 }
-function editSkill(i) {
-  openModal('编辑技能分类', skillModalHTML(state.skills[i]), () => {
+async function editSkill(i) {
+  openModal('编辑技能分类', skillModalHTML(state.skills[i]), async () => {
     state.skills[i] = collectSkillModal({...state.skills[i]});
     renderSkillsList();
-    downloadJSON('skills.json', state.skills);
-    showToast('技能已更新，请替换 data/skills.json');
+    await saveToGitHub('skills.json', state.skills);
     closeModal();
   });
 }
-function deleteSkill(i) {
+async function deleteSkill(i) {
   if (!confirm('确认删除？')) return;
   state.skills.splice(i, 1);
   renderSkillsList();
-  downloadJSON('skills.json', state.skills);
-  showToast('已删除，请替换 data/skills.json');
+  await saveToGitHub('skills.json', state.skills);
 }
 
 // ══ Music ════════════════════════════════════════════════
@@ -933,31 +1041,28 @@ function collectMusicModal(m) {
   m.file = document.getElementById('mu-file').value;
   return m;
 }
-function openNewMusic() {
+async function openNewMusic() {
   switchPage('music', document.querySelectorAll('.nav-item')[6]);
-  openModal('添加音乐作品', musicModalHTML({}), () => {
+  openModal('添加音乐作品', musicModalHTML({}), async () => {
     state.music.push(collectMusicModal({ id: Date.now(), cover: '' }));
     renderMusicList();
-    downloadJSON('music.json', state.music);
-    showToast('音乐已添加，请替换 data/music.json');
+    await saveToGitHub('music.json', state.music);
     closeModal();
   });
 }
-function editMusic(i) {
-  openModal('编辑音乐作品', musicModalHTML(state.music[i]), () => {
+async function editMusic(i) {
+  openModal('编辑音乐作品', musicModalHTML(state.music[i]), async () => {
     state.music[i] = collectMusicModal({...state.music[i]});
     renderMusicList();
-    downloadJSON('music.json', state.music);
-    showToast('已更新，请替换 data/music.json');
+    await saveToGitHub('music.json', state.music);
     closeModal();
   });
 }
-function deleteMusic(i) {
+async function deleteMusic(i) {
   if (!confirm('确认删除？')) return;
   state.music.splice(i, 1);
   renderMusicList();
-  downloadJSON('music.json', state.music);
-  showToast('已删除，请替换 data/music.json');
+  await saveToGitHub('music.json', state.music);
 }
 
 // ══ Education ════════════════════════════════════════════
@@ -997,30 +1102,27 @@ function collectEduModal(e) {
   e.desc = document.getElementById('ef-desc').value;
   return e;
 }
-function openNewEdu() {
-  openModal('添加教育经历', eduModalHTML({}), () => {
+async function openNewEdu() {
+  openModal('添加教育经历', eduModalHTML({}), async () => {
     state.education.push(collectEduModal({ id: Date.now() }));
     renderEduList();
-    downloadJSON('education.json', state.education);
-    showToast('已添加，请替换 data/education.json');
+    await saveToGitHub('education.json', state.education);
     closeModal();
   });
 }
-function editEdu(i) {
-  openModal('编辑教育经历', eduModalHTML(state.education[i]), () => {
+async function editEdu(i) {
+  openModal('编辑教育经历', eduModalHTML(state.education[i]), async () => {
     state.education[i] = collectEduModal({...state.education[i]});
     renderEduList();
-    downloadJSON('education.json', state.education);
-    showToast('已更新，请替换 data/education.json');
+    await saveToGitHub('education.json', state.education);
     closeModal();
   });
 }
-function deleteEdu(i) {
+async function deleteEdu(i) {
   if (!confirm('确认删除？')) return;
   state.education.splice(i, 1);
   renderEduList();
-  downloadJSON('education.json', state.education);
-  showToast('已删除，请替换 data/education.json');
+  await saveToGitHub('education.json', state.education);
 }
 
 // ══ Utils ════════════════════════════════════════════════
