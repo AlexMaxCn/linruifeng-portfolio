@@ -130,15 +130,17 @@
       font-family: "Playfair Display", "Noto Sans SC", serif;
       font-size: clamp(40px, 6vw, 76px);
       font-weight: 900; color: var(--ink);
-      letter-spacing: -0.03em; line-height: 1.25;
+      letter-spacing: -0.03em; line-height: 1.6 !important;
       margin-bottom: 20px;
+      overflow: visible;
     }
     .hero h1 em {
       font-style: italic;
       background: linear-gradient(135deg, var(--teal), #0abab0);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
-      padding-bottom: 4px; /* 防止渐变背景切到底部笔画 */
+      display: inline-block;
+      padding: 0.08em 0;
     }
     .hero-desc {
       font-family: "Caveat", cursive;
