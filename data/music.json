@@ -22,5 +22,13 @@
     "cover": "https://picsum.photos/seed/midnight/300/300",
     "description": "个人原创作品，假面舞会的迷幻氛围",
     "featured": true
+  },
+  {
+    "id": 1781880410242,
+    "cover": "",
+    "title": " Floating",
+    "desc": "",
+    "file": "audio/ Floating.mp3",
+    "featured": false
   }
 ]
