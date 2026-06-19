@@ -130,7 +130,7 @@
       font-family: "Playfair Display", "Noto Sans SC", serif;
       font-size: clamp(40px, 6vw, 76px);
       font-weight: 900; color: var(--ink);
-      letter-spacing: -0.03em; line-height: 1.08;
+      letter-spacing: -0.03em; line-height: 1.25;
       margin-bottom: 20px;
     }
     .hero h1 em {
@@ -138,6 +138,7 @@
       background: linear-gradient(135deg, var(--teal), #0abab0);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
+      padding-bottom: 4px; /* 防止渐变背景切到底部笔画 */
     }
     .hero-desc {
       font-family: "Caveat", cursive;
@@ -276,7 +277,8 @@
       margin-bottom: 24px; border: 2px solid rgba(255,255,255,0.08);
       display: block;
     }
-    .profile-name { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+    .profile-name { font-size: 24px; font-weight: 700; margin-bottom: 2px; }
+    .profile-name-cn { font-size: 13px; color: rgba(255,255,255,0.45); letter-spacing: 0.12em; margin-bottom: 6px; }
     .profile-title { color: rgba(255,255,255,0.45); font-size: 13.5px; margin-bottom: 28px; }
     .profile-links { display: grid; gap: 8px; }
     .profile-link {
@@ -607,6 +609,7 @@
           <div class="profile-card reveal">
             <img class="profile-photo" src="证件照/d13cd8d20afc76ef32431b89d08d61c3.jpg" alt="AlexMax 证件照">
             <div class="profile-name">AlexMax</div>
+            <div class="profile-name-cn">林锐锋</div>
             <div class="profile-title">录音技术与艺术 · 广东艺术职业学院</div>
             <div class="profile-links">
               <a href="tel:19864292005" class="profile-link">
