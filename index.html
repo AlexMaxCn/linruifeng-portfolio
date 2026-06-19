@@ -1027,6 +1027,9 @@
           btn.textContent = '▶';
           btn.classList.remove('playing');
         } else {
+          /* 双向联动：播放前暂停 Hero 播放器 */
+          if (window.__pauseHeroPlayer) window.__pauseHeroPlayer();
+
           document.querySelectorAll('.audio-player').forEach(p => {
             if (p !== player) {
               const a = p._audio;
@@ -1126,6 +1129,18 @@
 
       const playTrack = () => {
         if (!audio) { loadTrack(pickRandom()); }
+
+        /* 双向联动：播放前暂停 Music 区域所有播放器 */
+        document.querySelectorAll('.audio-player').forEach(p => {
+          const a = p._audio;
+          if (a && p._playing) {
+            a.pause();
+            p._playing = false;
+            const b = p.querySelector('.play-btn');
+            if (b) { b.textContent = '▶'; b.classList.remove('playing'); }
+          }
+        });
+
         audio.play().then(() => {
           playing = true;
           updatePlayBtn();
@@ -1211,6 +1226,9 @@
 
       /* 页面加载后预加载第一首（不自动播放）*/
       loadTrack(0);
+
+      /* 暴露暂停函数，供 Music 区域播放器调用（双向联动）*/
+      window.__pauseHeroPlayer = pauseTrack;
     })();
 
     // ── Cursor Tilt Effect on Project Cards ──
