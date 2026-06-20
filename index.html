@@ -942,7 +942,7 @@
     <div class="hero-inner">
       <div>
         <div class="hero-greeting reveal">Nice to meet you, I'm</div>
-        <h1 class="reveal d1">AlexMax<br><em>声音讲述故事</em></h1>
+        <h1 class="reveal d1"><span id="hero-name">AlexMax</span><br><em>声音讲述故事</em></h1>
         <p class="hero-desc reveal d2" id="hero-desc-text">录音技术与艺术专业，擅长现场扩声、录音制作与音乐创作，同时具备录音棚创业0→1实战经验与产品思维，致力于将声音技术与产品化能力结合。</p>
         <div class="hero-cta reveal d3">
           <a class="btn btn-primary" href="mailto:3221202923@qq.com" id="hero-email-btn">✉ 邮件联系</a>
@@ -1305,6 +1305,9 @@
       const heroDesc = document.getElementById('hero-desc-text');
       if (heroDesc && p.hero_copy) heroDesc.textContent = p.hero_copy;
 
+      const heroName = document.getElementById('hero-name');
+      if (heroName && p.name_en) heroName.textContent = p.name_en;
+
       const heroEmailBtn = document.getElementById('hero-email-btn');
       if (heroEmailBtn && p.email) heroEmailBtn.href = 'mailto:' + p.email;
 
@@ -1386,7 +1389,7 @@
       if (musicGrid && data.music) {
         musicGrid.innerHTML = data.music.map(function(m, i) {
           var delay = i > 0 ? ' d' + i : '';
-          var meta = [m.description || '', m.arranger ? '\u7f16\u66f2 / \u6df7\u97f3' : ''].filter(Boolean).join(' \u00b7 ');
+          var meta = [m.description || m.desc || '', m.arranger ? '\u7f16\u66f2 / \u6df7\u97f3' : ''].filter(Boolean).join(' \u00b7 ');
           return '<article class="track-card reveal' + delay + '" data-track="' + m.id + '"><h3>' + m.title + '</h3><p class="track-meta">' + meta + '</p><div class="audio-player" data-src="' + m.file + '"><button class="play-btn" aria-label="\u64ad\u653e">' + SVG_PLAY_BTN + SVG_PAUSE_BTN + '</button><div class="track-info"><div class="track-name">' + m.title + '</div><div class="time-display">0:00 / 0:00</div></div><div class="progress-wrap"><div class="progress-track"><div class="progress-fill"></div><div class="progress-thumb" style="left:0%"></div></div></div><a class="dl-btn" href="' + m.file + '" download title="\u4e0b\u8f7d">\u2193</a></div></article>';
         }).join('');
       }
@@ -1521,7 +1524,7 @@
     (() => {
       let TRACKS;
       if (pageData && pageData.music) {
-        TRACKS = pageData.music.map(m => ({ name: m.title, src: m.file, genre: m.description || '' }));
+        TRACKS = pageData.music.map(m => ({ name: m.title, src: m.file, genre: m.description || m.desc || '' }));
       } else {
         TRACKS = [
           { name: 'Midnight Masquerade', src: 'audio/Midnight_Masquerade.mp3', genre: '\u7535\u5b50\u97f3\u4e50' },

@@ -547,12 +547,16 @@
         <div class="card">
           <div class="card-title">基本信息</div>
           <div class="field-row">
-            <div class="field"><label>姓名</label><input id="p-name" type="text"></div>
-            <div class="field"><label>性别</label><input id="p-gender" type="text" placeholder="男"></div>
+            <div class="field"><label>中文姓名</label><input id="p-name" type="text"></div>
+            <div class="field"><label>英文姓名</label><input id="p-name-en" type="text" placeholder="AlexMax"></div>
           </div>
           <div class="field-row">
+            <div class="field"><label>性别</label><input id="p-gender" type="text" placeholder="男"></div>
             <div class="field"><label>年龄</label><input id="p-age" type="text" placeholder="23岁"></div>
+          </div>
+          <div class="field-row">
             <div class="field"><label>学校专业</label><input id="p-school" type="text"></div>
+            <div class="field"><label>证件照路径</label><input id="p-photo" type="text" placeholder="证件照/xxx.jpg"></div>
           </div>
           <div class="field">
             <label>职业标题（Hero 副标题）</label>
@@ -1206,9 +1210,11 @@ function renderProfileForm() {
   const p = state.profile;
   if (!p) return;
   document.getElementById('p-name').value = p.name || '';
+  document.getElementById('p-name-en').value = p.name_en || '';
   document.getElementById('p-gender').value = p.gender || '';
   document.getElementById('p-age').value = p.age || '';
   document.getElementById('p-school').value = p.school || '';
+  document.getElementById('p-photo').value = p.photo || '';
   document.getElementById('p-title').value = p.title || '';
   document.getElementById('p-hero-copy').value = p.hero_copy || '';
   document.getElementById('p-direction').value = p.direction || '';
@@ -1282,9 +1288,11 @@ async function saveProfile() {
   collectHeroStats();
   collectStrengths();
   state.profile.name = document.getElementById('p-name').value;
+  state.profile.name_en = document.getElementById('p-name-en').value;
   state.profile.gender = document.getElementById('p-gender').value;
   state.profile.age = document.getElementById('p-age').value;
   state.profile.school = document.getElementById('p-school').value;
+  state.profile.photo = document.getElementById('p-photo').value;
   state.profile.title = document.getElementById('p-title').value;
   state.profile.hero_copy = document.getElementById('p-hero-copy').value;
   state.profile.direction = document.getElementById('p-direction').value;
@@ -1439,7 +1447,7 @@ function renderMusicList() {
     <div class="list-item">
       <div class="list-item-body">
         <div class="list-item-title">🎵 ${esc(m.title)} ${m.featured ? '<span class="badge featured">精选</span>' : ''}</div>
-        <div class="list-item-sub">${esc(m.desc)} · <code style="font-size:12px">${esc(m.file)}</code></div>
+        <div class="list-item-sub">${esc(m.description || m.desc || '')} · <code style="font-size:12px">${esc(m.file)}</code></div>
       </div>
       <div class="list-item-actions">
         <button class="btn-icon" onclick="editMusic(${i})" title="编辑">
@@ -1469,7 +1477,16 @@ function musicModalHTML(m) {
       <div id="upload-status" style="display:none;font-size:13px;margin-top:8px"></div>
     </div>
     <div class="field"><label>作品名称</label><input id="mu-title" type="text" value="${esc(m.title||'')}"></div>
-    <div class="field"><label>简介描述</label><input id="mu-desc" type="text" value="${esc(m.desc||'')}"></div>
+    <div class="field"><label>简介描述</label><input id="mu-desc" type="text" value="${esc(m.description||m.desc||'')}"></div>
+    <div class="field-row">
+      <div class="field"><label>作曲</label><input id="mu-composer" type="text" value="${esc(m.composer||'')}"></div>
+      <div class="field"><label>作词</label><input id="mu-lyricist" type="text" value="${esc(m.lyricist||'')}"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>编曲</label><input id="mu-arranger" type="text" value="${esc(m.arranger||'')}"></div>
+      <div class="field"><label>制作人</label><input id="mu-producer" type="text" value="${esc(m.producer||'')}"></div>
+    </div>
+    <div class="field"><label>封面图 URL（可选）</label><input id="mu-cover" type="text" value="${esc(m.cover||'')}" placeholder="https://..."></div>
     <div class="field">
       <label>音频文件路径</label>
       <input id="mu-file" type="text" value="${esc(m.file||'')}" placeholder="audio/歌曲名.mp3">
@@ -1484,10 +1501,17 @@ function musicModalHTML(m) {
   `;
 }
 function collectMusicModal(m) {
-  m.title = document.getElementById('mu-title').value;
-  m.desc = document.getElementById('mu-desc').value;
-  m.file = document.getElementById('mu-file').value;
+  m.title = document.getElementById('mu-title').value.trim();
+  m.description = document.getElementById('mu-desc').value.trim();
+  m.composer = document.getElementById('mu-composer').value.trim();
+  m.lyricist = document.getElementById('mu-lyricist').value.trim();
+  m.arranger = document.getElementById('mu-arranger').value.trim();
+  m.producer = document.getElementById('mu-producer').value.trim();
+  m.cover = document.getElementById('mu-cover').value.trim();
+  m.file = document.getElementById('mu-file').value.trim();
   m.featured = document.getElementById('mu-featured').checked;
+  // 清理旧的 desc 字段（数据迁移）
+  delete m.desc;
   return m;
 }
 async function openNewMusic() {

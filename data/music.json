@@ -25,18 +25,26 @@
   },
   {
     "id": 1781880410242,
+    "title": "Floating",
+    "composer": "林锐锋",
+    "lyricist": "",
+    "arranger": "林锐锋",
+    "producer": "林锐锋",
+    "file": "audio/Floating.mp3",
     "cover": "",
-    "title": " Floating",
-    "desc": "",
-    "file": "audio/ Floating.mp3",
+    "description": "",
     "featured": true
   },
   {
     "id": 1781880627930,
-    "cover": "",
     "title": "Velvet Haze",
-    "desc": "70s复古合成器",
+    "composer": "林锐锋",
+    "lyricist": "",
+    "arranger": "林锐锋",
+    "producer": "林锐锋",
     "file": "audio/Velvet Haze.mp3",
+    "cover": "",
+    "description": "70s复古合成器",
     "featured": true
   }
 ]
