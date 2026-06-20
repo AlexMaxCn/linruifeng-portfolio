@@ -671,6 +671,7 @@
           <div class="card-title">
             音乐作品
             <button class="btn-save" style="padding:6px 16px;font-size:13px" onclick="openNewMusic()">+ 添加作品</button>
+            <button class="btn-outline" id="save-sort-btn" style="padding:6px 16px;font-size:13px;display:none;color:var(--accent);border-color:var(--accent)" onclick="saveMusicSort()">💾 保存排序</button>
           </div>
           <div id="music-list"></div>
           <div style="margin-top:16px;padding:14px;background:rgba(13,148,136,.08);border-radius:8px;font-size:13px;color:var(--muted)">
@@ -1676,6 +1677,7 @@ function moveMusicUp(i) {
   state.music[i-1] = state.music[i];
   state.music[i] = tmp;
   renderMusicList();
+  document.getElementById('save-sort-btn').style.display = '';
 }
 function moveMusicDown(i) {
   if (i >= state.music.length - 1) return;
@@ -1683,6 +1685,16 @@ function moveMusicDown(i) {
   state.music[i+1] = state.music[i];
   state.music[i] = tmp;
   renderMusicList();
+  document.getElementById('save-sort-btn').style.display = '';
+}
+async function saveMusicSort() {
+  document.getElementById('save-sort-btn').textContent = '保存中...';
+  await saveToGitHub('music.json', state.music);
+  document.getElementById('save-sort-btn').textContent = '✅ 已保存';
+  setTimeout(function() {
+    document.getElementById('save-sort-btn').style.display = 'none';
+    document.getElementById('save-sort-btn').textContent = '💾 保存排序';
+  }, 2000);
 }
 function musicModalHTML(m) {
   return `
