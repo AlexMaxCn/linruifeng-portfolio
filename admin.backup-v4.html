@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>后台管理 — 林锐锋个人主页</title>
+  <style>
+    :root {
+      --bg: #0f1318;
+      --surface: #1a2029;
+      --surface2: #232c38;
+      --border: #2e3a48;
+      --accent: #0d9488;
+      --accent-light: rgba(13,148,136,.15);
+      --accent-2: #f59e0b;
+      --text: #e2e8f0;
+      --muted: #7a8fa0;
+      --danger: #ef4444;
+      --danger-light: rgba(239,68,68,.12);
+      --success: #22c55e;
+      --radius: 10px;
+      --sidebar: 240px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Microsoft YaHei","PingFang SC",Arial,sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+    input, textarea, select { font-family: inherit; }
+
+    /* ── Login Screen ── */
+    #login-screen {
+      position: fixed; inset: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--bg);
+    }
+    .login-box {
+      width: 380px; padding: 44px 40px;
+      background: var(--surface); border: 1px solid rgba(13,148,136,.12);
+      border-radius: 20px; box-shadow: 0 40px 80px rgba(0,0,0,.6), 0 0 60px rgba(13,148,136,.06);
+    }
+    .login-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+    .login-logo .mark {
+      width: 44px; height: 44px; display: grid; place-items: center;
+      background: var(--accent); border-radius: 10px; font-size: 20px; font-weight: 900;
+    }
+    .login-logo h1 { font-size: 20px; line-height: 1.3; }
+    .login-logo p { color: var(--muted); font-size: 13px; }
+    .login-label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+    .login-input {
+      width: 100%; padding: 11px 14px; margin-bottom: 16px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-size: 15px;
+      transition: border-color .2s;
+    }
+    .login-input:focus { outline: none; border-color: var(--accent); }
+    .login-btn {
+      width: 100%; padding: 12px; background: var(--accent);
+      border: none; border-radius: 8px; color: #fff;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      transition: opacity .2s;
+    }
+    .login-btn:hover { opacity: .88; }
+    .login-err { color: var(--danger); font-size: 13px; margin-top: 10px; display: none; }
+
+    /* ── App Shell ── */
+    #app { display: none; min-height: 100vh; position: relative; z-index: 1; }
+    .shell { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar); flex-shrink: 0;
+      background: var(--surface); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh;
+    }
+    .sidebar-brand {
+      padding: 20px 18px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sidebar-brand .mark {
+      width: 32px; height: 32px; display: grid; place-items: center;
+      background: var(--accent); border-radius: 8px; font-size: 14px; font-weight: 900;
+    }
+    .sidebar-brand span { font-weight: 700; font-size: 15px; }
+    nav.sidebar-nav { flex: 1; padding: 12px 10px; overflow-y: auto; }
+    .nav-group-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; padding: 12px 8px 6px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 10px; border-radius: 8px; font-size: 14px; font-weight: 500;
+      cursor: pointer; color: var(--muted); transition: background .15s, color .15s;
+      border: none; background: none; width: 100%; text-align: left;
+    }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: var(--accent-light); color: var(--accent); border-left: 3px solid var(--accent); padding-left: 7px; }
+    .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .sidebar-footer {
+      padding: 14px 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Main Content ── */
+    .main { flex: 1; overflow-x: hidden; }
+    .topbar {
+      position: sticky; top: 0; z-index: 10;
+      padding: 14px 28px;
+      background: rgba(11,14,19,.94); backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      box-shadow: 0 1px 12px rgba(0,0,0,.3);
+    }
+    .topbar-title { font-size: 18px; font-weight: 700; }
+    .topbar-actions { display: flex; gap: 10px; align-items: center; }
+    .btn-save {
+      padding: 8px 20px; background: var(--accent); border: none;
+      border-radius: 8px; color: #fff; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: opacity .2s;
+    }
+.btn-save { transition: opacity .2s, box-shadow .2s; }
+    .btn-save:hover { opacity: .88; box-shadow: 0 4px 16px rgba(13,148,136,.25); }
+    .btn-outline {
+      padding: 8px 16px; background: transparent;
+      border: 1px solid var(--border); border-radius: 8px;
+      color: var(--muted); font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: border-color .15s, color .15s;
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .preview-link {
+      padding: 8px 16px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 8px;
+      color: var(--muted); font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: color .15s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .preview-link:hover { color: var(--text); }
+
+    /* ── Page Content ── */
+    .page { display: none; padding: 28px; max-width: 860px; }
+    .page.active { display: block; opacity: 1; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Cards / Sections ── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+      transition: border-color .25s, box-shadow .25s;
+    }
+    .card:hover { border-color: rgba(13,148,136,.25); box-shadow: 0 0 20px rgba(13,148,136,.04); }
+    .card-title {
+      font-size: 15px; font-weight: 700; margin-bottom: 18px;
+      padding-bottom: 14px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    /* ── Form Fields ── */
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 13px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+    .field input, .field textarea, .field select {
+      width: 100%; padding: 10px 13px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-size: 14px;
+      transition: border-color .2s;
+    }
+    .field input:focus, .field textarea:focus, .field select:focus {
+      outline: none; border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(13,148,136,.10);
+    }
+    .field textarea { resize: vertical; min-height: 88px; line-height: 1.6; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .field-row.col3 { grid-template-columns: 1fr 1fr 1fr; }
+    .field-hint { font-size: 12px; color: var(--muted); margin-top: 5px; }
+
+    /* ── List Items (projects / education / music) ── */
+    .list-item {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 16px 18px; margin-bottom: 12px;
+      display: flex; align-items: flex-start; gap: 14px;
+    }
+    .list-item-body { flex: 1; min-width: 0; }
+    .list-item-title { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .list-item-sub { font-size: 13px; color: var(--muted); margin-top: 3px; }
+    .list-item-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .btn-icon {
+      width: 32px; height: 32px; display: grid; place-items: center;
+      border: 1px solid var(--border); border-radius: 6px;
+      background: transparent; color: var(--muted);
+      cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+    }
+    .btn-icon:hover { background: var(--surface); color: var(--text); }
+    .btn-icon.danger:hover { background: var(--danger-light); color: var(--danger); border-color: var(--danger); }
+    .btn-add {
+      width: 100%; padding: 10px; margin-top: 4px;
+      background: transparent; border: 1px dashed var(--border);
+      border-radius: 8px; color: var(--muted); font-size: 14px;
+      cursor: pointer; transition: border-color .15s, color .15s;
+    }
+    .btn-add:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 50;
+      background: rgba(0,0,0,.6); backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid rgba(13,148,136,.15);
+      border-radius: 16px; width: 100%; max-width: 620px;
+      max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 40px 80px rgba(0,0,0,.6), 0 0 40px rgba(13,148,136,.06);
+    }
+    .modal-head {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-head h3 { font-size: 17px; }
+    .modal-close {
+      width: 30px; height: 30px; display: grid; place-items: center;
+      border: none; background: var(--surface2); border-radius: 6px;
+      color: var(--muted); cursor: pointer; font-size: 18px;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { padding: 20px 24px; }
+    .modal-foot {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: flex-end; gap: 10px;
+    }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 28px; right: 28px; z-index: 200;
+      padding: 12px 20px; border-radius: 10px;
+      font-size: 14px; font-weight: 600; color: #fff;
+      background: var(--success); box-shadow: 0 8px 24px rgba(0,0,0,.3);
+      transform: translateY(20px); opacity: 0;
+      transition: transform .3s ease, opacity .3s ease;
+      pointer-events: none;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.error { background: var(--danger); }
+
+    /* ── Tags Input ── */
+    .tags-wrap {
+      display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+      min-height: 42px; padding: 6px 10px;
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+      cursor: text; transition: border-color .2s;
+    }
+    .tags-wrap:focus-within { border-color: var(--accent); }
+    .tag-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px; background: var(--accent-light); border-radius: 4px;
+      font-size: 13px; color: var(--accent); font-weight: 600;
+    }
+    .tag-chip button { border: none; background: none; color: var(--accent); cursor: pointer; font-size: 14px; padding: 0; line-height: 1; }
+    .tag-input {
+      border: none; background: transparent; color: var(--text);
+      font-size: 14px; outline: none; min-width: 100px; flex: 1;
+    }
+
+    /* ── Audio Upload Area ── */
+    .upload-area {
+      border: 2px dashed var(--border); border-radius: 10px;
+      padding: 28px 20px; text-align: center; cursor: pointer;
+      transition: border-color .2s, background .2s;
+      background: var(--surface2);
+    }
+    .upload-area:hover { border-color: var(--accent); background: rgba(13,148,136,.05); }
+    .upload-area.uploading { border-color: var(--accent-2); pointer-events: none; }
+    .upload-area.success { border-color: var(--success); }
+    .upload-area.error { border-color: var(--danger); }
+    .upload-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--muted); }
+    .upload-placeholder svg { color: var(--muted); transition: color .2s; }
+    .upload-area:hover .upload-placeholder svg { color: var(--accent); }
+    .upload-placeholder > span:first-of-type { font-size: 14px; font-weight: 600; color: var(--text); }
+    .upload-hint { font-size: 12px; color: var(--muted); }
+    .upload-progress-bar {
+      width: 100%; height: 4px; border-radius: 2px;
+      background: var(--surface); overflow: hidden; margin-top: 10px; display: none;
+    }
+    .upload-progress-fill {
+      height: 100%; width: 0%; border-radius: 2px;
+      background: var(--accent); transition: width .3s ease;
+    }
+
+    /* ── Bullet list editor ── */
+    .bullets-list { display: grid; gap: 8px; margin-bottom: 8px; }
+    .bullet-row { display: flex; gap: 8px; align-items: center; }
+    .bullet-input {
+      flex: 1; padding: 8px 12px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 7px; color: var(--text); font-size: 14px;
+    }
+    .bullet-input:focus { outline: none; border-color: var(--accent); }
+    .btn-remove-bullet {
+      width: 30px; height: 30px; border: none; background: transparent;
+      color: var(--muted); cursor: pointer; font-size: 18px; flex-shrink: 0;
+    }
+    .btn-remove-bullet:hover { color: var(--danger); }
+
+    /* ── Impact editor ── */
+    .impact-list { display: grid; gap: 8px; margin-bottom: 8px; }
+    .impact-row { display: grid; grid-template-columns: 1fr 2fr auto; gap: 8px; align-items: center; }
+    .impact-input {
+      padding: 8px 12px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 7px; color: var(--text); font-size: 14px;
+    }
+    .impact-input:focus { outline: none; border-color: var(--accent); }
+
+    /* ── Badge ── */
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 4px;
+      font-size: 12px; font-weight: 700; background: var(--accent-light); color: var(--accent);
+    }
+    .badge.featured { background: rgba(245,158,11,.15); color: var(--accent-2); }
+
+    /* ── Dashboard ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px;
+    }
+    .stat-card .num { font-size: 28px; font-weight: 800; color: var(--accent); }
+    .stat-card .lbl { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 720px) {
+      .sidebar { display: none; }
+      .stats-grid { grid-template-columns: repeat(2,1fr); }
+      .field-row, .field-row.col3 { grid-template-columns: 1fr; }
+      .impact-row { grid-template-columns: 1fr 1fr auto; }
+    }
+
+    /* ── Mobile Topbar ── */
+    .mobile-topbar {
+      display: none;
+      position: sticky; top: 0; z-index: 20;
+      padding: 12px 16px;
+      background: rgba(15,19,24,.96); backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      align-items: center; justify-content: space-between;
+    }
+    .mobile-topbar .hamburger {
+      width: 40px; height: 40px; display: grid; place-items: center;
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); font-size: 20px; cursor: pointer;
+    }
+    .mobile-topbar .page-title-mobile { font-size: 16px; font-weight: 700; }
+    .mobile-topbar .save-queue-btn {
+      padding: 8px 14px; background: var(--accent); border: none;
+      border-radius: 8px; color: #fff; font-size: 13px; font-weight: 600;
+      cursor: pointer; display: none;
+    }
+    .mobile-topbar .save-queue-btn.has-items { display: inline-block; }
+
+    /* ── Sidebar Overlay (mobile) ── */
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; z-index: 90;
+      background: rgba(0,0,0,.55); backdrop-filter: blur(3px);
+    }
+    .sidebar-overlay.open { display: block; }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed; top: 0; left: 0; z-index: 100;
+        transform: translateX(-100%); transition: transform .3s ease;
+        width: 260px;
+      }
+      .sidebar.open { transform: translateX(0); }
+      .mobile-topbar { display: flex !important; }
+      .shell { flex-direction: column; }
+      .topbar { display: none; }
+      .page { padding: 20px 16px; }
+      .stats-grid { grid-template-columns: repeat(2,1fr); gap: 12px; }
+      .field-row, .field-row.col3 { grid-template-columns: 1fr; }
+      .impact-row { grid-template-columns: 1fr 1fr auto; }
+      /* Modal mobile: bottom sheet */
+      .modal-overlay { padding: 0; align-items: flex-end; }
+      .modal { max-width: 100%; max-height: 92vh; border-radius: 20px 20px 0 0; }
+      .modal-head { padding: 18px 20px 14px; }
+      .modal-body { padding: 18px 20px; }
+      .modal-foot { padding: 14px 20px; }
+      .modal-foot .btn-outline { order: 2; flex: 1; }
+      .modal-foot .btn-save { order: 1; flex: 2; }
+      .modal-back { display: grid !important; }
+    }
+  
+    /* ── Queue History Panel ── */
+    .queue-log { max-height: 320px; overflow-y: auto; margin-top: 12px; }
+    .queue-log-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; border-radius: 6px;
+      font-size: 13px; margin-bottom: 4px;
+      background: var(--surface2);
+    }
+    .queue-log-item .status-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .queue-log-item .status-dot.ok { background: var(--success); }
+    .queue-log-item .status-dot.err { background: var(--danger); }
+    .queue-log-item .q-filename { font-weight: 600; color: var(--text); flex: 1; }
+    .queue-log-item .q-time { color: var(--muted); font-size: 12px; }
+    .queue-log-item.err .q-filename { color: var(--danger); }
+
+    /* ── Queue Status Badge ── */
+    #queue-status {
+      position: fixed; top: 14px; right: 14px; z-index: 100;
+      display: none; align-items: center; gap: 8px;
+      padding: 8px 14px; border-radius: 8px;
+      background: var(--surface); border: 1px solid var(--border);
+      font-size: 13px; color: var(--accent); font-weight: 600;
+      box-shadow: 0 4px 16px rgba(0,0,0,.3);
+    }
+    #queue-status.active { display: flex !important; }
+    #queue-status .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid var(--accent); border-top-color: transparent;
+      border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══════════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="mark">林</div>
+      <div>
+        <h1>后台管理系统</h1>
+        <p>林锐锋个人主页</p>
+      </div>
+    </div>
+    <label class="login-label" for="pwd">管理员密码</label>
+    <input id="pwd" class="login-input" type="password" placeholder="请输入密码" autocomplete="current-password">
+    <button class="login-btn" onclick="doLogin()">登录</button>
+    <p class="login-err" id="login-err">密码错误，请重试</p>
+  </div>
+</div>
+
+<!-- ══ APP ════════════════════════════════════════════ -->
+<div id="app">
+  <!-- Mobile Topbar -->
+  <div class="mobile-topbar" id="mobile-topbar">
+    <button class="hamburger" onclick="toggleSidebar()">☰</button>
+    <span class="page-title-mobile" id="page-title-mobile">仪表盘</span>
+    <button class="save-queue-btn" id="save-queue-btn" onclick="processQueueNow()">保存队列 (0)</button>
+  </div>
+
+  <div class="shell">
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="mark">林</div>
+        <span>管理后台</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-group-label">概览</div>
+        <button class="nav-item active" onclick="switchPage('dashboard', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          仪表盘
+        </button>
+        <div class="nav-group-label">内容管理</div>
+        <button class="nav-item" onclick="switchPage('profile', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          个人信息
+        </button>
+        <button class="nav-item" onclick="switchPage('projects', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h12"/></svg>
+          项目经历
+        </button>
+        <button class="nav-item" onclick="switchPage('skills', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          技能标签
+        </button>
+        <button class="nav-item" onclick="switchPage('music', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          音乐作品
+        </button>
+        <button class="nav-item" onclick="switchPage('education', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          教育经历
+        </button>
+        <div class="nav-group-label">系统</div>
+        <button class="nav-item" onclick="switchPage('settings', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          系统设置
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="nav-item" onclick="logout()" style="color:var(--danger)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          退出登录
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+      <div class="topbar">
+        <div class="topbar-title" id="page-title">仪表盘</div>
+        <div class="topbar-actions">
+          <a class="preview-link" href="index.html" target="_blank">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            预览前台
+          </a>
+        </div>
+      </div>
+
+      <!-- ── Dashboard ── -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid" id="dash-stats"></div>
+        <div class="card">
+          <div class="card-title">快捷操作</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+            <button class="btn-outline" style="padding:14px;font-size:14px" onclick="switchPage('profile', document.querySelector('.nav-item:nth-child(3)'))">✏️ 编辑个人信息</button>
+            <button class="btn-outline" style="padding:14px;font-size:14px" onclick="openNewProject()">➕ 添加项目</button>
+            <button class="btn-outline" style="padding:14px;font-size:14px" onclick="openNewMusic()">🎵 上传音乐</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">使用说明</div>
+          <div style="color:var(--muted);font-size:14px;line-height:1.9">
+            <p>✅ 本系统现已支持 <strong style="color:var(--text)">GitHub API 直写</strong>，配置 Token 后点击保存即可直接更新线上数据，无需手动操作。</p>
+            <p style="margin-top:8px">🔑 首次使用请在「系统设置」中配置 <strong style="color:var(--accent)">GitHub Personal Access Token</strong>（需要 <code style="background:var(--surface2);padding:2px 6px;border-radius:4px">repo</code> 权限）。</p>
+            <p style="margin-top:8px">🎵 音乐作品支持 <strong style="color:var(--accent)">一键上传音频文件</strong>，在「音乐作品」页点击添加，选择文件即可自动上传到 GitHub。</p>
+            <p style="margin-top:8px">🌐 保存后 GitHub Pages 会自动重新构建（约 1-2 分钟），刷新前台即可看到更新。</p>
+          </div>
+        </div>
+
+        <div class="card" id="queue-history-card">
+          <div class="card-title">
+            保存队列记录
+            <button class="btn-outline" style="font-size:12px;padding:4px 10px" onclick="clearQueueHistory()">清空记录</button>
+          </div>
+          <div class="queue-log" id="queue-log"></div>
+          <div id="queue-log-empty" style="color:var(--muted);font-size:13px;padding:8px 0;display:none">暂无保存记录</div>
+        </div>
+      </div>
+
+      <!-- ── Profile ── -->
+      <div class="page" id="page-profile">
+        <div class="card">
+          <div class="card-title">基本信息</div>
+          <div class="field-row">
+            <div class="field"><label>姓名</label><input id="p-name" type="text"></div>
+            <div class="field"><label>性别</label><input id="p-gender" type="text" placeholder="男"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>年龄</label><input id="p-age" type="text" placeholder="23岁"></div>
+            <div class="field"><label>学校专业</label><input id="p-school" type="text"></div>
+          </div>
+          <div class="field">
+            <label>职业标题（Hero 副标题）</label>
+            <input id="p-title" type="text">
+          </div>
+          <div class="field">
+            <label>Hero 介绍文案</label>
+            <textarea id="p-hero-copy" rows="3"></textarea>
+          </div>
+          <div class="field">
+            <label>方向标签</label>
+            <input id="p-direction" type="text" placeholder="录音 / 音效 / 现场执行 / 项目统筹">
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">联系方式</div>
+          <div class="field-row">
+            <div class="field"><label>电话</label><input id="p-phone" type="text"></div>
+            <div class="field"><label>邮箱</label><input id="p-email" type="email"></div>
+          </div>
+          <div class="field"><label>网易云主页链接</label><input id="p-netease" type="url"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">关于我</div>
+          <div class="field"><label>关于我标题</label><input id="p-about-title" type="text"></div>
+          <div class="field"><label>关于我描述</label><textarea id="p-about-lead"></textarea></div>
+        </div>
+        <div class="card">
+          <div class="card-title">联系 CTA 区块</div>
+          <div class="field"><label>CTA 标题</label><input id="p-cta-title" type="text"></div>
+          <div class="field"><label>CTA 描述</label><textarea id="p-cta-desc" rows="2"></textarea></div>
+        </div>
+        <div class="card">
+          <div class="card-title">音乐区块</div>
+          <div class="field"><label>音乐区块描述</label><textarea id="p-music-lead" rows="2"></textarea></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Hero 数据统计</div>
+          <div id="hero-stats-editor"></div>
+          <button class="btn-add" onclick="addHeroStat()">+ 添加统计数字</button>
+        </div>
+        <div class="card">
+          <div class="card-title">核心优势（About 区块）</div>
+          <div id="strengths-editor"></div>
+          <button class="btn-add" onclick="addStrength()">+ 添加优势</button>
+        </div>
+        <button class="btn-save" style="padding:12px 36px;font-size:15px" onclick="saveProfile()">保存所有个人信息</button>
+      </div>
+
+      <!-- ── Projects ── -->
+      <div class="page" id="page-projects">
+        <div class="card">
+          <div class="card-title">
+            项目列表
+            <button class="btn-save" style="padding:6px 16px;font-size:13px" onclick="openNewProject()">+ 新建项目</button>
+          </div>
+          <div id="projects-list"></div>
+        </div>
+      </div>
+
+      <!-- ── Skills ── -->
+      <div class="page" id="page-skills">
+        <div class="card">
+          <div class="card-title">
+            技能分类
+            <button class="btn-save" style="padding:6px 16px;font-size:13px" onclick="openNewSkill()">+ 新建分类</button>
+          </div>
+          <div id="skills-list"></div>
+        </div>
+      </div>
+
+      <!-- ── Music ── -->
+      <div class="page" id="page-music">
+        <div class="card">
+          <div class="card-title">
+            音乐作品
+            <button class="btn-save" style="padding:6px 16px;font-size:13px" onclick="openNewMusic()">+ 添加作品</button>
+          </div>
+          <div id="music-list"></div>
+          <div style="margin-top:16px;padding:14px;background:rgba(13,148,136,.08);border-radius:8px;font-size:13px;color:var(--muted)">
+            💡 点击「添加作品」可直接选择本地音频文件一键上传，文件自动保存到 <code style="color:var(--accent)">audio/</code> 目录并填充路径。也支持手动输入路径。
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Education ── -->
+      <div class="page" id="page-education">
+        <div class="card">
+          <div class="card-title">
+            教育经历
+            <button class="btn-save" style="padding:6px 16px;font-size:13px" onclick="openNewEdu()">+ 添加经历</button>
+          </div>
+          <div id="edu-list"></div>
+        </div>
+      </div>
+
+      <!-- ── Settings ── -->
+      <div class="page" id="page-settings">
+        <div class="card">
+          <div class="card-title">系统设置</div>
+          <div class="field">
+            <label>管理员密码（修改后刷新页面生效）</label>
+            <input id="new-pwd" type="password" placeholder="输入新密码">
+            <div class="field-hint">密码存储在浏览器本地，换浏览器需重新设置</div>
+          </div>
+          <button class="btn-save" onclick="savePwd()">修改密码</button>
+        </div>
+        <div class="card">
+          <div class="card-title">GitHub 同步配置</div>
+          <div class="field">
+            <label>GitHub Personal Access Token</label>
+            <input id="gh-token" type="password" placeholder="ghp_xxxxxxxxxxxx">
+            <div class="field-hint">需要 <code style="background:var(--surface2);padding:2px 6px;border-radius:4px">repo</code> 权限。Token 存储在浏览器本地，不会发送给第三方。</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap">
+            <button class="btn-save" onclick="saveToken()">保存 Token</button>
+            <button class="btn-outline" onclick="testToken()" style="font-size:13px;padding:8px 14px">测试连接</button>
+            <button class="btn-outline" onclick="triggerBuild()" style="font-size:13px;padding:8px 14px;border-color:var(--accent);color:var(--accent)">🚀 触发构建</button>
+            <span id="token-status" style="font-size:13px;color:var(--muted)"></span>
+          </div>
+          <div id="build-status" style="font-size:13px;margin-top:8px;display:none"></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color:var(--danger)">危险操作</div>
+          <p style="font-size:14px;color:var(--muted);margin-bottom:14px">以下操作不可撤销，请谨慎使用。</p>
+          <button class="btn-outline" style="border-color:var(--danger);color:var(--danger)" onclick="if(confirm('确认退出登录？'))logout()">退出登录</button>
+        </div>
+      </div>
+    </div><!-- /main -->
+  </div><!-- /shell -->
+</div><!-- /app -->
+
+<!-- ── Modal ── -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-head">
+      <button class="modal-back" onclick="closeModal()" style="display:none;width:30px;height:30px;border:none;background:var(--surface2);border-radius:6px;color:var(--text);cursor:pointer;font-size:18px;align-items:center;justify-content:center">←</button>
+      <h3 id="modal-title">编辑</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-foot">
+      <button class="btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn-save" id="modal-save-btn">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Queue Status -->
+<div id="queue-status" style="display:none">
+  <div class="spinner"></div>
+  <span id="queue-status-text"></span>
+</div>
+
+<script>
+// ══ Config ══════════════════════════════════════════════
+const DEFAULT_PWD = '3221202923Lyf';
+const DATA_FILES = {
+  profile: 'data/profile.json',
+  strengths: 'data/strengths.json',
+  projects: 'data/projects.json',
+  skills: 'data/skills.json',
+  music: 'data/music.json',
+  education: 'data/education.json',
+};
+
+
+// ══ Save Queue System ═════════════════════════════════
+window._saveQueue = [];
+window._saveQueueRunning = false;
+window._buildDebounceTimer = null;
+window._queueHistory = [];  // { filename, status, time }
+function addQueueRecord(filename, status) {
+  window._queueHistory.unshift({ filename, status, time: new Date().toLocaleTimeString() });
+  if (window._queueHistory.length > 50) window._queueHistory.pop();
+  updateQueueHistoryUI();
+}
+
+
+function enqueueSave(filename, data, showToastMsg) {
+  return new Promise((resolve, reject) => {
+    window._saveQueue.push({ filename, data, showToastMsg, resolve, reject });
+    updateQueueUI();
+    if (!window._saveQueueRunning) processQueue();
+  });
+}
+
+async function processQueue() {
+  if (window._saveQueue.length === 0) { window._saveQueueRunning = false; updateQueueUI(); return; }
+  window._saveQueueRunning = true;
+  updateQueueUI();
+  const { filename, data, showToastMsg, resolve, reject } = window._saveQueue.shift();
+  try {
+    const result = await _doSaveToGitHub(filename, data, showToastMsg);
+    resolve(result);
+    addQueueRecord(filename, "success");
+  } catch(e) {
+    reject(e);
+    addQueueRecord(filename, "error: " + e.message);
+  }
+  // Debounce build trigger: wait 2s after last save, then trigger once
+  clearTimeout(window._buildDebounceTimer);
+  window._buildDebounceTimer = setTimeout(() => {
+    triggerBuildSilent();
+  }, 2000);
+  processQueue();
+}
+
+function updateQueueUI() {
+  const btn = document.getElementById('save-queue-btn');
+  const badge = document.getElementById('queue-status');
+  const badgeText = document.getElementById('queue-status-text');
+  if (!btn) return;
+  if (window._saveQueue.length > 0 || window._saveQueueRunning) {
+    btn.textContent = window._saveQueueRunning ? '保存中... (' + window._saveQueue.length + ')' : '保存队列 (' + window._saveQueue.length + ')';
+    btn.classList.add('has-items');
+    if (badge) badge.classList.add('active');
+    if (badgeText) badgeText.textContent = window._saveQueueRunning ? '保存中...' : '排队中: ' + window._saveQueue.length + ' 项';
+  } else {
+    btn.classList.remove('has-items');
+    if (badge) badge.classList.remove('active');
+  }
+}
+
+async function triggerBuildSilent() {
+  const token = getToken();
+  if (!token) return;
+  try {
+    const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/pages/builds`, {
+      method: 'POST', headers: { Authorization: `token ${token}` }
+    });
+  } catch(e) {}
+}
+
+// ══ Queue History UI ════════════════════════════════════
+function updateQueueHistoryUI() {
+  const log = document.getElementById("queue-log");
+  const empty = document.getElementById("queue-log-empty");
+  if (!log) return;
+  if (window._queueHistory.length === 0) {
+    log.innerHTML = "";
+    empty.style.display = "block";
+    return;
+  }
+  empty.style.display = "none";
+  var html = "";
+  for (var i = 0; i < window._queueHistory.length; i++) {
+    var r = window._queueHistory[i];
+    var isOk = r.status === "success";
+    var cls = isOk ? "ok" : "err";
+    var itemCls = "queue-log-item" + (isOk ? "" : " err");
+    html += '<div class="' + itemCls + '"><span class="status-dot ' + cls + '"></span><span class="q-filename">' + escapeHtml(r.filename) + '</span><span style="font-size:12px;color:var(--muted);flex-shrink:0">' + escapeHtml(r.status) + '</span><span class="q-time">' + escapeHtml(r.time) + '</span></div>';
+  }
+  log.innerHTML = html;
+}
+function escapeHtml(str) {
+  var div = document.createElement("div");
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
+function clearQueueHistory() {
+  window._queueHistory = [];
+  updateQueueHistoryUI();
+}
+
+// ══ Replaced saveToGitHub (now just enqueues) ══
+async function saveToGitHub(filename, data, showToastMsg) {
+  return enqueueSave(filename, data, showToastMsg);
+}
+
+// ══ Actual GitHub save (internal) ════════════════════
+async function _doSaveToGitHub(filename, data, showToastMsg) {
+  const token = getToken();
+  if (!token) {
+    showToast('请先在「系统设置」中配置 GitHub Token', true);
+    switchPage('settings', document.querySelectorAll('.nav-item')[7]);
+    return false;
+  }
+  const path = `data/${filename}`;
+  const content = JSON.stringify(data, null, 2);
+  const encoded = base64Encode(content);
+
+  const fetchSha = async () => {
+    const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}`, {
+      headers: { Authorization: `token ${token}` }
+    });
+    if (r.ok) return (await r.json()).sha;
+    if (r.status === 404) return null;
+    throw new Error(`获取文件 SHA 失败: ${r.status}`);
+  };
+
+  const doPut = async (sha, attempt) => {
+    const body = { message: `Update ${filename} via admin panel`, content: encoded, branch: GH_BRANCH };
+    if (sha) body.sha = sha;
+    const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, {
+      method: 'PUT',
+      headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({ message: `HTTP ${r.status}` }));
+      if (err.message && err.message.includes('does not match') && attempt < 3) {
+        const freshSha = await fetchSha();
+        return doPut(freshSha, attempt + 1);
+      }
+      throw new Error(err.message || `提交失败: ${r.status}`);
+    }
+  };
+
+  const sha = await fetchSha();
+  await doPut(sha, 1);
+  if (showToastMsg) showToast(`✅ ${filename} 已保存`);
+  return true;
+}
+
+
+// ══ State ════════════════════════════════════════════════
+let state = { profile: null, strengths: [], projects: [], skills: [], music: [], education: [] };
+let modalSaveCallback = null;
+let editingIndex = -1;
+
+// ══ Auth ═════════════════════════════════════════════════
+function getPwd() { return localStorage.getItem('admin_pwd') || DEFAULT_PWD; }
+function doLogin() {
+  const v = document.getElementById('pwd').value;
+  if (v === getPwd()) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadAll();
+    updateTokenStatus();
+  } else {
+    document.getElementById('login-err').style.display = 'block';
+  }
+}
+document.getElementById('pwd').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+function logout() { document.getElementById('app').style.display='none'; document.getElementById('login-screen').style.display='flex'; document.getElementById('pwd').value=''; }
+function savePwd() {
+  const v = document.getElementById('new-pwd').value.trim();
+  if (!v) { showToast('密码不能为空', true); return; }
+  localStorage.setItem('admin_pwd', v);
+  showToast('密码已修改');
+  document.getElementById('new-pwd').value = '';
+}
+
+// ══ Nav ══════════════════════════════════════════════════
+const pageTitles = { dashboard:'仪表盘', profile:'个人信息', projects:'项目经历', skills:'技能标签', music:'音乐作品', education:'教育经历', settings:'系统设置' };
+function switchPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  document.getElementById('page-title').textContent = pageTitles[id] || id;
+  // Also update mobile topbar title
+  const mobTitle = document.getElementById('page-title-mobile');
+  if (mobTitle) mobTitle.textContent = pageTitles[id] || id;
+  // Close sidebar on mobile after navigation
+  closeSidebarMobile();
+}
+
+// ══ Data Loading ═════════════════════════════════════════
+async function loadJSON(key) {
+  const r = await fetch(DATA_FILES[key] + '?t=' + Date.now());
+  return r.json();
+}
+async function loadAll() {
+  try {
+    const [profile, strengths, projects, skills, music, education] = await Promise.all([
+      loadJSON('profile'), loadJSON('strengths'), loadJSON('projects'),
+      loadJSON('skills'), loadJSON('music'), loadJSON('education')
+    ]);
+    state = { profile, strengths, projects, skills, music, education };
+  } catch(e) {
+    showToast('数据加载失败: ' + e.message, true);
+    return;
+  }
+  // Render each page with error isolation
+  try { renderDashboard(); } catch(e) { console.error('renderDashboard error:', e); }
+  try { renderProfileForm(); } catch(e) { console.error('renderProfileForm error:', e); showToast('个人信息表单渲染失败', true); }
+  try { renderProjectsList(); } catch(e) { console.error('renderProjectsList error:', e); }
+  try { renderSkillsList(); } catch(e) { console.error('renderSkillsList error:', e); }
+  try { renderMusicList(); } catch(e) { console.error('renderMusicList error:', e); }
+  try { renderEduList(); } catch(e) { console.error('renderEduList error:', e); }
+}
+
+// ══ GitHub Config ═══════════════════════════════════════
+const GH_OWNER = 'AlexMaxCn';
+const GH_REPO  = 'linruifeng-portfolio';
+const GH_BRANCH = 'main';
+
+function getToken() { return localStorage.getItem('gh_token') || ''; }
+function saveToken() {
+  const v = document.getElementById('gh-token').value.trim();
+  if (!v) { showToast('请输入 Token', true); return; }
+  localStorage.setItem('gh_token', v);
+  showToast('Token 已保存（存储在浏览器本地）');
+  document.getElementById('gh-token').value = '';
+  updateTokenStatus();
+}
+async function testToken() {
+  const token = getToken();
+  if (!token) { showToast('请先保存 Token', true); return; }
+  try {
+    const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}`, {
+      headers: { Authorization: `token ${token}` }
+    });
+    if (r.ok) {
+      const data = await r.json();
+      document.getElementById('token-status').textContent = `✅ 已连接 → ${data.full_name}`;
+      document.getElementById('token-status').style.color = 'var(--success)';
+    } else {
+      document.getElementById('token-status').textContent = `❌ Token 无效（${r.status}）`;
+      document.getElementById('token-status').style.color = 'var(--danger)';
+    }
+  } catch(e) {
+    document.getElementById('token-status').textContent = `❌ 网络错误：${e.message}`;
+    document.getElementById('token-status').style.color = 'var(--danger)';
+  }
+}
+function updateTokenStatus() {
+  const token = getToken();
+  if (token) {
+    document.getElementById('token-status').textContent = '⚡ Token 已保存，点击「测试连接」验证';
+    document.getElementById('token-status').style.color = 'var(--accent)';
+  }
+}
+
+// ══ Trigger GitHub Pages Build ═══════════════════════
+async function triggerBuild() {
+  const token = getToken();
+  if (!token) { showToast('请先配置 Token', true); return; }
+  const bs = document.getElementById('build-status');
+  bs.style.display = 'block';
+  bs.style.color = 'var(--muted)';
+  bs.textContent = '⏳ 正在触发构建...';
+  try {
+    const r = await fetch(
+      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/pages/builds`,
+      {
+        method: 'POST',
+        headers: { Authorization: `token ${token}` },
+      }
+    );
+    if (r.ok || r.status === 201) {
+      bs.style.color = 'var(--success)';
+      bs.textContent = '✅ 构建已触发，请等待 1-2 分钟...';
+    } else if (r.status === 429) {
+      bs.style.color = 'var(--accent-2)';
+      bs.textContent = '⚠️ 触发过于频繁（每分钟限 1 次），请稍后再试';
+    } else {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP ${r.status}`);
+    }
+  } catch (e) {
+    bs.style.color = 'var(--danger)';
+    bs.textContent = `❌ 触发失败：${e.message}`;
+  }
+}
+
+// ══ Base64 encode (handles Unicode) ═════════════════════════
+function base64Encode(str) {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+
+
+// ══ Toast ════════════════════════════════════════════════
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show' + (isError ? ' error' : '');
+  setTimeout(() => { t.className = ''; }, 3000);
+}
+
+// ══ Upload Audio File to GitHub ═══════════════════════════
+async function uploadAudioFile(file, onProgress) {
+  const token = getToken();
+  if (!token) {
+    showToast('请先在「系统设置」中配置 GitHub Token', true);
+    switchPage('settings', document.querySelectorAll('.nav-item')[7]);
+    return null;
+  }
+
+  // File size check (GitHub Contents API limit: 100MB)
+  const maxSize = 100 * 1024 * 1024;
+  if (file.size > maxSize) {
+    showToast('文件超过 100MB 限制，请压缩后再上传', true);
+    return null;
+  }
+
+  if (onProgress) onProgress(5);
+
+  // Convert to base64 in chunks (avoids call stack overflow on large files)
+  const arrayBuffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(arrayBuffer);
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode.apply(null, chunk);
+    if (onProgress) onProgress(5 + Math.min(i / bytes.length * 45, 45));
+  }
+  const base64 = btoa(binary);
+
+  const filePath = 'audio/' + file.name;
+
+  if (onProgress) onProgress(55);
+
+  // Get SHA if file already exists (for overwrite)
+  let sha = null;
+  try {
+    const r = await fetch(
+      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${filePath}?ref=${GH_BRANCH}`,
+      { headers: { Authorization: `token ${token}` } }
+    );
+    if (r.ok) sha = (await r.json()).sha;
+  } catch(e) {}
+
+  if (onProgress) onProgress(65);
+
+  // Upload via Contents API
+  const body = {
+    message: `Upload audio: ${file.name}`,
+    content: base64,
+    branch: GH_BRANCH,
+  };
+  if (sha) body.sha = sha;
+
+  const r = await fetch(
+    `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${filePath}`,
+    {
+      method: 'PUT',
+      headers: {
+        Authorization: `token ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    }
+  );
+
+  if (onProgress) onProgress(100);
+
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({ message: `HTTP ${r.status}` }));
+    throw new Error(err.message || `上传失败：${r.status}`);
+  }
+
+  return filePath;
+}
+
+// ══ Handle Audio File Selection (in modal) ════════════════
+async function handleAudioUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const status = document.getElementById('upload-status');
+  const uploadArea = document.getElementById('upload-area');
+  const progressBar = document.getElementById('upload-progress-bar');
+  const progressFill = document.getElementById('upload-progress-fill');
+  const saveBtn = document.getElementById('modal-save-btn');
+
+  const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+
+  // Update UI to uploading state
+  uploadArea.classList.add('uploading');
+  uploadArea.classList.remove('success', 'error');
+  progressBar.style.display = 'block';
+  progressFill.style.width = '0%';
+  saveBtn.disabled = true;
+
+  uploadArea.querySelector('.upload-placeholder').innerHTML = `
+    <div style="font-size:14px;color:var(--text);font-weight:600">${esc(file.name)}</div>
+    <span class="upload-hint">${sizeMB} MB · 正在上传...</span>
+  `;
+
+  status.style.display = 'block';
+  status.style.color = 'var(--accent)';
+  status.textContent = `⏳ 正在上传 ${file.name}（${sizeMB} MB）...`;
+
+  try {
+    const filePath = await uploadAudioFile(file, (pct) => {
+      progressFill.style.width = pct + '%';
+      status.textContent = `⏳ 正在上传 ${file.name}（${sizeMB} MB）... ${Math.round(pct)}%`;
+    });
+
+    if (filePath) {
+      // Auto-fill file path
+      document.getElementById('mu-file').value = filePath;
+
+      // Auto-fill title if empty
+      const titleInput = document.getElementById('mu-title');
+      if (!titleInput.value.trim()) {
+        const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+        titleInput.value = nameWithoutExt;
+      }
+
+      // Success UI
+      uploadArea.classList.remove('uploading');
+      uploadArea.classList.add('success');
+      status.style.color = 'var(--success)';
+      status.textContent = '✅ 上传成功！文件路径已自动填充';
+      uploadArea.querySelector('.upload-placeholder').innerHTML = `
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span style="color:var(--success);font-weight:600">${esc(file.name)}</span>
+        <span class="upload-hint">${sizeMB} MB · 点击可重新选择文件</span>
+      `;
+    }
+  } catch (e) {
+    uploadArea.classList.remove('uploading');
+    uploadArea.classList.add('error');
+    status.style.color = 'var(--danger)';
+    status.textContent = '❌ 上传失败：' + e.message;
+    uploadArea.querySelector('.upload-placeholder').innerHTML = `
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+      <span style="color:var(--danger);font-weight:600">上传失败</span>
+      <span class="upload-hint">点击重新选择文件</span>
+    `;
+  } finally {
+    saveBtn.disabled = false;
+    // Reset file input so the same file can be selected again
+    input.value = '';
+  }
+}
+
+// ══ Modal ════════════════════════════════════════════════
+function openModal(title, bodyHTML, saveCb) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = bodyHTML;
+  modalSaveCallback = saveCb;
+  document.getElementById('modal-save-btn').onclick = () => { saveCb(); };
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modal-overlay')) return;
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+// ══ Dashboard ═══════════════════════════════════════════
+function renderDashboard() {
+  document.getElementById('dash-stats').innerHTML = `
+    <div class="stat-card"><div class="num">${state.projects.length}</div><div class="lbl">项目经历</div></div>
+    <div class="stat-card"><div class="num">${state.music.length}</div><div class="lbl">音乐作品</div></div>
+    <div class="stat-card"><div class="num">${state.skills.reduce((a,s)=>a+s.items.length,0)}</div><div class="lbl">技能标签</div></div>
+    <div class="stat-card"><div class="num">${state.education.length}</div><div class="lbl">教育经历</div></div>
+  `;
+}
+
+// ══ Profile ══════════════════════════════════════════════
+function renderProfileForm() {
+  const p = state.profile;
+  if (!p) return;
+  document.getElementById('p-name').value = p.name || '';
+  document.getElementById('p-gender').value = p.gender || '';
+  document.getElementById('p-age').value = p.age || '';
+  document.getElementById('p-school').value = p.school || '';
+  document.getElementById('p-title').value = p.title || '';
+  document.getElementById('p-hero-copy').value = p.hero_copy || '';
+  document.getElementById('p-direction').value = p.direction || '';
+  document.getElementById('p-phone').value = p.phone || '';
+  document.getElementById('p-email').value = p.email || '';
+  document.getElementById('p-netease').value = p.netease_url || '';
+  document.getElementById('p-about-title').value = p.about_title || '';
+  document.getElementById('p-about-lead').value = p.about_lead || '';
+  document.getElementById('p-cta-title').value = p.cta_title || '';
+  document.getElementById('p-cta-desc').value = p.cta_desc || '';
+  document.getElementById('p-music-lead').value = p.music_section_lead || '';
+  renderHeroStatsEditor();
+  renderStrengthsEditor();
+}
+
+function renderHeroStatsEditor() {
+  const stats = state.profile.hero_stats || [];
+  document.getElementById('hero-stats-editor').innerHTML = stats.map((s, i) => `
+    <div class="field-row" style="margin-bottom:10px;align-items:end">
+      <div class="field" style="margin:0"><label>数值</label><input class="hs-val" data-i="${i}" type="text" value="${esc(s.value)}"></div>
+      <div class="field" style="margin:0"><label>说明</label><input class="hs-lbl" data-i="${i}" type="text" value="${esc(s.label)}"></div>
+      <button class="btn-icon danger" onclick="removeHeroStat(${i})" style="height:38px;margin-bottom:2px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      </button>
+    </div>`).join('');
+}
+function addHeroStat() {
+  state.profile.hero_stats = state.profile.hero_stats || [];
+  state.profile.hero_stats.push({ value: '', label: '' });
+  renderHeroStatsEditor();
+}
+function removeHeroStat(i) {
+  state.profile.hero_stats.splice(i, 1);
+  renderHeroStatsEditor();
+}
+function collectHeroStats() {
+  const vals = document.querySelectorAll('.hs-val');
+  const lbls = document.querySelectorAll('.hs-lbl');
+  state.profile.hero_stats = Array.from(vals).map((v,i)=>({ value: v.value, label: lbls[i].value }));
+}
+
+function renderStrengthsEditor() {
+  document.getElementById('strengths-editor').innerHTML = state.strengths.map((s,i) => `
+    <div class="list-item">
+      <div class="list-item-body">
+        <div class="field" style="margin:0 0 10px"><label>标题</label><input class="str-title" data-i="${i}" type="text" value="${esc(s.title)}"></div>
+        <div class="field" style="margin:0"><label>描述</label><input class="str-desc" data-i="${i}" type="text" value="${esc(s.desc)}"></div>
+      </div>
+      <div class="list-item-actions" style="padding-top:24px">
+        <button class="btn-icon danger" onclick="removeStrength(${i})">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+        </button>
+      </div>
+    </div>`).join('');
+}
+function addStrength() {
+  state.strengths.push({ id: Date.now(), title: '', desc: '', color: 'accent' });
+  renderStrengthsEditor();
+}
+function removeStrength(i) {
+  state.strengths.splice(i, 1);
+  renderStrengthsEditor();
+}
+function collectStrengths() {
+  const titles = document.querySelectorAll('.str-title');
+  const descs = document.querySelectorAll('.str-desc');
+  state.strengths = Array.from(titles).map((t,i)=>({ ...state.strengths[i], title: t.value, desc: descs[i].value }));
+}
+
+async function saveProfile() {
+  collectHeroStats();
+  collectStrengths();
+  state.profile.name = document.getElementById('p-name').value;
+  state.profile.gender = document.getElementById('p-gender').value;
+  state.profile.age = document.getElementById('p-age').value;
+  state.profile.school = document.getElementById('p-school').value;
+  state.profile.title = document.getElementById('p-title').value;
+  state.profile.hero_copy = document.getElementById('p-hero-copy').value;
+  state.profile.direction = document.getElementById('p-direction').value;
+  state.profile.phone = document.getElementById('p-phone').value;
+  state.profile.email = document.getElementById('p-email').value;
+  state.profile.netease_url = document.getElementById('p-netease').value;
+  state.profile.about_title = document.getElementById('p-about-title').value;
+  state.profile.about_lead = document.getElementById('p-about-lead').value;
+  state.profile.cta_title = document.getElementById('p-cta-title').value;
+  state.profile.cta_desc = document.getElementById('p-cta-desc').value;
+  state.profile.music_section_lead = document.getElementById('p-music-lead').value;
+  await saveToGitHub('profile.json', state.profile, false);
+  await saveToGitHub('strengths.json', state.strengths, false);
+  showToast('✅ 个人信息已保存，构建将在 2 秒内自动触发');
+}
+
+// ══ Projects ═════════════════════════════════════════════
+function renderProjectsList() {
+  document.getElementById('projects-list').innerHTML = state.projects.map((p,i) => `
+    <div class="list-item">
+      <div class="list-item-body">
+        <div class="list-item-title">${esc(p.title)} ${p.featured ? '<span class="badge featured">精选</span>' : ''}</div>
+        <div class="list-item-sub">${p.tags.join(' · ')} · ${esc(p.date)}</div>
+      </div>
+      <div class="list-item-actions">
+        <button class="btn-icon" onclick="editProject(${i})" title="编辑">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-icon danger" onclick="deleteProject(${i})" title="删除">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+        </button>
+      </div>
+    </div>`).join('') || '<p style="color:var(--muted);padding:12px">暂无项目，点击右上角新建</p>';
+}
+
+function projectModalHTML(p) {
+  const tags = (p.tags||[]).join(', ');
+  const impact = (p.impact||[]).map(v=>`${v.value}|${v.label}`).join('\n');
+  const bullets = (p.bullets||[]).join('\n');
+  return `
+    <div class="field"><label>项目标题</label><input id="mf-title" type="text" value="${esc(p.title||'')}"></div>
+    <div class="field-row">
+      <div class="field"><label>日期</label><input id="mf-date" type="text" value="${esc(p.date||'')}"></div>
+      <div class="field"><label>
+        <input id="mf-featured" type="checkbox" ${p.featured?'checked':''} style="margin-right:6px">
+        设为精选（大卡片）</label><div style="height:38px"></div>
+      </div>
+    </div>
+    <div class="field"><label>标签（逗号分隔）</label><input id="mf-tags" type="text" value="${esc(tags)}"></div>
+    <div class="field"><label>项目描述</label><textarea id="mf-desc" rows="3">${esc(p.desc||'')}</textarea></div>
+    <div class="field"><label>数据亮点（每行一条，格式：数值|说明）</label><textarea id="mf-impact" rows="3" placeholder="15%|整体预算下调\n3轮|面对面谈判">${esc(impact)}</textarea></div>
+    <div class="field"><label>要点列表（每行一条）</label><textarea id="mf-bullets" rows="4" placeholder="负责...&#10;协助...">${esc(bullets)}</textarea></div>
+  `;
+}
+function collectProjectModal(p) {
+  p.title = document.getElementById('mf-title').value;
+  p.date = document.getElementById('mf-date').value;
+  p.featured = document.getElementById('mf-featured').checked;
+  p.tags = document.getElementById('mf-tags').value.split(',').map(s=>s.trim()).filter(Boolean);
+  p.desc = document.getElementById('mf-desc').value;
+  p.impact = document.getElementById('mf-impact').value.split('\n').filter(Boolean).map(line => {
+    const [value, label=''] = line.split('|');
+    return { value: value.trim(), label: label.trim() };
+  });
+  p.bullets = document.getElementById('mf-bullets').value.split('\n').filter(Boolean);
+  return p;
+}
+async function openNewProject() {
+  switchPage('projects', document.querySelectorAll('.nav-item')[4]);
+  editingIndex = -1;
+  openModal('新建项目', projectModalHTML({}), async () => {
+    const p = collectProjectModal({ id: Date.now() });
+    state.projects.push(p);
+    renderProjectsList();
+    await saveToGitHub('projects.json', state.projects);
+    closeModal();
+  });
+}
+async function editProject(i) {
+  editingIndex = i;
+  openModal('编辑项目', projectModalHTML(state.projects[i]), async () => {
+    state.projects[i] = collectProjectModal({...state.projects[i]});
+    renderProjectsList();
+    await saveToGitHub('projects.json', state.projects);
+    closeModal();
+  });
+}
+async function deleteProject(i) {
+  if (!confirm(`确认删除「${state.projects[i].title}」？`)) return;
+  state.projects.splice(i, 1);
+  renderProjectsList();
+  await saveToGitHub('projects.json', state.projects);
+}
+
+// ══ Skills ═══════════════════════════════════════════════
+function renderSkillsList() {
+  document.getElementById('skills-list').innerHTML = state.skills.map((s,i) => `
+    <div class="list-item">
+      <div class="list-item-body">
+        <div class="list-item-title">${esc(s.category)}</div>
+        <div class="list-item-sub">${s.items.join(' · ')}</div>
+      </div>
+      <div class="list-item-actions">
+        <button class="btn-icon" onclick="editSkill(${i})" title="编辑">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-icon danger" onclick="deleteSkill(${i})" title="删除">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+        </button>
+      </div>
+    </div>`).join('') || '<p style="color:var(--muted);padding:12px">暂无技能分类</p>';
+}
+function skillModalHTML(s) {
+  return `
+    <div class="field"><label>分类名称</label><input id="sf-cat" type="text" value="${esc(s.category||'')}"></div>
+    <div class="field"><label>分类描述</label><input id="sf-desc" type="text" value="${esc(s.desc||'')}"></div>
+    <div class="field"><label>技能标签（逗号分隔）</label><textarea id="sf-items" rows="3">${esc((s.items||[]).join(', '))}</textarea></div>
+  `;
+}
+function collectSkillModal(s) {
+  s.category = document.getElementById('sf-cat').value;
+  s.desc = document.getElementById('sf-desc').value;
+  s.items = document.getElementById('sf-items').value.split(',').map(v=>v.trim()).filter(Boolean);
+  return s;
+}
+async function openNewSkill() {
+  openModal('新建技能分类', skillModalHTML({}), async () => {
+    state.skills.push(collectSkillModal({ id: Date.now() }));
+    renderSkillsList();
+    await saveToGitHub('skills.json', state.skills);
+    closeModal();
+  });
+}
+async function editSkill(i) {
+  openModal('编辑技能分类', skillModalHTML(state.skills[i]), async () => {
+    state.skills[i] = collectSkillModal({...state.skills[i]});
+    renderSkillsList();
+    await saveToGitHub('skills.json', state.skills);
+    closeModal();
+  });
+}
+async function deleteSkill(i) {
+  if (!confirm('确认删除？')) return;
+  state.skills.splice(i, 1);
+  renderSkillsList();
+  await saveToGitHub('skills.json', state.skills);
+}
+
+// ══ Music ════════════════════════════════════════════════
+function renderMusicList() {
+  document.getElementById('music-list').innerHTML = state.music.map((m,i) => `
+    <div class="list-item">
+      <div class="list-item-body">
+        <div class="list-item-title">🎵 ${esc(m.title)} ${m.featured ? '<span class="badge featured">精选</span>' : ''}</div>
+        <div class="list-item-sub">${esc(m.desc)} · <code style="font-size:12px">${esc(m.file)}</code></div>
+      </div>
+      <div class="list-item-actions">
+        <button class="btn-icon" onclick="editMusic(${i})" title="编辑">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-icon danger" onclick="deleteMusic(${i})" title="删除">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+        </button>
+      </div>
+    </div>`).join('') || '<p style="color:var(--muted);padding:12px">暂无音乐作品</p>';
+}
+function musicModalHTML(m) {
+  return `
+    <div class="field">
+      <label>上传音频文件</label>
+      <div class="upload-area" id="upload-area" onclick="document.getElementById('audio-file-input').click()">
+        <input type="file" id="audio-file-input" accept="audio/*" style="display:none" onchange="handleAudioUpload(this)">
+        <div class="upload-placeholder">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>点击选择音频文件</span>
+          <span class="upload-hint">支持 mp3/wav 等格式，自动上传到 GitHub audio/ 目录</span>
+        </div>
+        <div class="upload-progress-bar" id="upload-progress-bar">
+          <div class="upload-progress-fill" id="upload-progress-fill"></div>
+        </div>
+      </div>
+      <div id="upload-status" style="display:none;font-size:13px;margin-top:8px"></div>
+    </div>
+    <div class="field"><label>作品名称</label><input id="mu-title" type="text" value="${esc(m.title||'')}"></div>
+    <div class="field"><label>简介描述</label><input id="mu-desc" type="text" value="${esc(m.desc||'')}"></div>
+    <div class="field">
+      <label>音频文件路径</label>
+      <input id="mu-file" type="text" value="${esc(m.file||'')}" placeholder="audio/歌曲名.mp3">
+      <div class="field-hint">上传文件后自动填充，也可手动输入</div>
+    </div>
+    <div class="field">
+      <label>
+        <input id="mu-featured" type="checkbox" ${m.featured?'checked':''} style="margin-right:6px">
+        设为精选作品
+      </label>
+    </div>
+  `;
+}
+function collectMusicModal(m) {
+  m.title = document.getElementById('mu-title').value;
+  m.desc = document.getElementById('mu-desc').value;
+  m.file = document.getElementById('mu-file').value;
+  m.featured = document.getElementById('mu-featured').checked;
+  return m;
+}
+async function openNewMusic() {
+  switchPage('music', document.querySelectorAll('.nav-item')[6]);
+  openModal('添加音乐作品', musicModalHTML({}), async () => {
+    state.music.push(collectMusicModal({ id: Date.now(), cover: '' }));
+    renderMusicList();
+    await saveToGitHub('music.json', state.music);
+    closeModal();
+  });
+}
+async function editMusic(i) {
+  openModal('编辑音乐作品', musicModalHTML(state.music[i]), async () => {
+    state.music[i] = collectMusicModal({...state.music[i]});
+    renderMusicList();
+    await saveToGitHub('music.json', state.music);
+    closeModal();
+  });
+}
+async function deleteMusic(i) {
+  if (!confirm('确认删除？')) return;
+  state.music.splice(i, 1);
+  renderMusicList();
+  await saveToGitHub('music.json', state.music);
+}
+
+// ══ Education ════════════════════════════════════════════
+function renderEduList() {
+  document.getElementById('edu-list').innerHTML = state.education.map((e,i) => `
+    <div class="list-item">
+      <div class="list-item-body">
+        <div class="list-item-title">${esc(e.school)} · ${esc(e.major)}</div>
+        <div class="list-item-sub">${esc(e.period)} · ${esc(e.degree)}</div>
+      </div>
+      <div class="list-item-actions">
+        <button class="btn-icon" onclick="editEdu(${i})" title="编辑">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-icon danger" onclick="deleteEdu(${i})" title="删除">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+        </button>
+      </div>
+    </div>`).join('') || '<p style="color:var(--muted);padding:12px">暂无教育经历</p>';
+}
+function eduModalHTML(e) {
+  return `
+    <div class="field-row">
+      <div class="field"><label>就读时间</label><input id="ef-period" type="text" value="${esc(e.period||'')}" placeholder="2023-2026"></div>
+      <div class="field"><label>学历类型</label><input id="ef-degree" type="text" value="${esc(e.degree||'')}" placeholder="全日制大专"></div>
+    </div>
+    <div class="field"><label>学校名称</label><input id="ef-school" type="text" value="${esc(e.school||'')}"></div>
+    <div class="field"><label>专业</label><input id="ef-major" type="text" value="${esc(e.major||'')}"></div>
+    <div class="field"><label>描述</label><textarea id="ef-desc" rows="3">${esc(e.desc||'')}</textarea></div>
+  `;
+}
+function collectEduModal(e) {
+  e.period = document.getElementById('ef-period').value;
+  e.degree = document.getElementById('ef-degree').value;
+  e.school = document.getElementById('ef-school').value;
+  e.major = document.getElementById('ef-major').value;
+  e.desc = document.getElementById('ef-desc').value;
+  return e;
+}
+async function openNewEdu() {
+  openModal('添加教育经历', eduModalHTML({}), async () => {
+    state.education.push(collectEduModal({ id: Date.now() }));
+    renderEduList();
+    await saveToGitHub('education.json', state.education);
+    closeModal();
+  });
+}
+async function editEdu(i) {
+  openModal('编辑教育经历', eduModalHTML(state.education[i]), async () => {
+    state.education[i] = collectEduModal({...state.education[i]});
+    renderEduList();
+    await saveToGitHub('education.json', state.education);
+    closeModal();
+  });
+}
+async function deleteEdu(i) {
+  if (!confirm('确认删除？')) return;
+  state.education.splice(i, 1);
+  renderEduList();
+  await saveToGitHub('education.json', state.education);
+}
+
+// ══ Utils ════════════════════════════════════════════════
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+// ══ Mobile Nav ══════════════════════════════════
+function toggleSidebar() {
+  var sb = document.getElementById('sidebar');
+  var ov = document.getElementById('sidebar-overlay');
+  if (!sb || !ov) return;
+  var isOpen = sb.classList.contains('open');
+  sb.classList.toggle('open');
+  ov.classList.toggle('open');
+  document.body.style.overflow = isOpen ? '' : 'hidden';
+}
+function closeSidebarMobile() {
+  var sb = document.getElementById('sidebar');
+  var ov = document.getElementById('sidebar-overlay');
+  if (sb) sb.classList.remove('open');
+  if (ov) ov.classList.remove('open');
+  document.body.style.overflow = '';
+}
+function processQueueNow() {
+  // Manually trigger queue processing (called from mobile topbar)
+  if (window._saveQueue && window._saveQueue.length > 0) {
+    showToast('正在处理保存队列（' + window._saveQueue.length + ' 项）...');
+  }
+  // Queue auto-processes, this just gives feedback
+  updateQueueUI();
+}
+
+</script>
+</body>
+</html>
