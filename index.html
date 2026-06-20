@@ -60,19 +60,19 @@
     /* 初始状态：小幅度隐藏 */
     .reveal {
       opacity: 0;
-      transform: translateY(20px);
-      transition: opacity 0.35s ease, transform 0.45s cubic-bezier(0.25, 0.1, 0.25, 1);
+      transform: translateY(32px);
+      transition: opacity 0.28s ease, transform 0.38s cubic-bezier(0.25, 0.1, 0.25, 1);
     }
-    /* 可见状态：Q弹入场（JS 会在添加 visible 前临时切换 timing-function） */
+    /* 可见状态：Q弹入场 */
     .reveal.visible {
       opacity: 1;
       transform: translateY(0);
-      transition: opacity 0.4s ease, transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 1.25);
+      transition: opacity 0.32s ease, transform 0.48s cubic-bezier(0.25, 0.46, 0.45, 1.28);
     }
     /* 延迟类（仅影响 transition-delay） */
-    .reveal.d1 { transition-delay: 0.05s; }
-    .reveal.d2 { transition-delay: 0.12s; }
-    .reveal.d3 { transition-delay: 0.2s; }
+    .reveal.d1 { transition-delay: 0.04s; }
+    .reveal.d2 { transition-delay: 0.1s; }
+    .reveal.d3 { transition-delay: 0.16s; }
     /* 网格容器：始终可见，子卡片单独做交错动画 */
     .strengths-grid.reveal,
     .projects-grid.reveal,
@@ -89,8 +89,8 @@
     .track-card,
     .edu-card {
       opacity: 0;
-      transform: translateY(16px);
-      transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+      transform: translateY(24px);
+      transition: opacity 0.25s ease, transform 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
     }
     /* 容器可见后，子卡片交错入场 */
     .strengths-grid.visible .strength-card,
@@ -100,7 +100,7 @@
     .edu-grid.visible .edu-card {
       opacity: 1;
       transform: translateY(0);
-      transition: opacity 0.35s ease, transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 1.2);
+      transition: opacity 0.3s ease, transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 1.22);
     }
     .strengths-grid.visible .strength-card:nth-child(1),
     .projects-grid.visible .project-card:nth-child(1),
@@ -111,17 +111,17 @@
     .projects-grid.visible .project-card:nth-child(2),
     .skills-grid.visible .skill-card:nth-child(2),
     .music-grid.visible .track-card:nth-child(2),
-    .edu-grid.visible .edu-card:nth-child(2) { transition-delay: 0.08s; }
+    .edu-grid.visible .edu-card:nth-child(2) { transition-delay: 0.06s; }
     .strengths-grid.visible .strength-card:nth-child(3),
     .projects-grid.visible .project-card:nth-child(3),
     .skills-grid.visible .skill-card:nth-child(3),
     .music-grid.visible .track-card:nth-child(3),
-    .edu-grid.visible .edu-card:nth-child(3) { transition-delay: 0.16s; }
+    .edu-grid.visible .edu-card:nth-child(3) { transition-delay: 0.12s; }
     .strengths-grid.visible .strength-card:nth-child(n+4),
     .projects-grid.visible .project-card:nth-child(n+4),
     .skills-grid.visible .skill-card:nth-child(n+4),
     .music-grid.visible .track-card:nth-child(n+4),
-    .edu-grid.visible .edu-card:nth-child(n+4) { transition-delay: 0.24s; }
+    .edu-grid.visible .edu-card:nth-child(n+4) { transition-delay: 0.18s; }
     /* 减弱动画偏好 */
     @media (prefers-reduced-motion: reduce) {
       .reveal, .reveal.visible,
