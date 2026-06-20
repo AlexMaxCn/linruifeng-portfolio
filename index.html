@@ -736,87 +736,62 @@
     .music-section, #education, .cta-section,
     #main-nav { position: relative; z-index: 1; }
 
-    /* 黑胶唱片：同心圆 + 缓旋 */
-    .deco-vinyl {
+    /* ── Aurora 极光流动背景 ── */
+    .aurora {
       position: absolute;
       border-radius: 50%;
-      border: 1.5px solid rgba(13,148,136,0.05);
-      opacity: 0;
-      animation: deco-fadeIn 2s 0.5s ease forwards, deco-spin 75s linear infinite;
+      filter: blur(110px);
+      will-change: transform;
+      opacity: 0.7;
     }
-    .deco-vinyl::before {
-      content: '';
-      position: absolute;
-      inset: 28%;
-      border-radius: 50%;
-      border: 1px solid rgba(13,148,136,0.04);
+    .aurora-1 {
+      width: 950px; height: 750px;
+      top: -350px; left: -250px;
+      background: radial-gradient(ellipse at 35% 45%, rgba(13,148,136,0.22) 0%, rgba(13,148,136,0.06) 50%, transparent 72%);
+      animation: aurora-drift-1 26s ease-in-out infinite alternate;
     }
-    .deco-vinyl::after {
-      content: '';
-      position: absolute;
-      inset: 46%;
-      border-radius: 50%;
-      background: rgba(13,148,136,0.06);
+    .aurora-2 {
+      width: 850px; height: 650px;
+      top: 15%; right: -350px;
+      background: radial-gradient(ellipse at 65% 55%, rgba(253,224,71,0.20) 0%, rgba(253,224,71,0.05) 55%, transparent 78%);
+      animation: aurora-drift-2 34s ease-in-out infinite alternate;
     }
-    .deco-vinyl-1 { width: 400px; height: 400px; top: -140px; right: -110px; }
-    .deco-vinyl-2 { width: 260px; height: 260px; bottom: -80px; left: -90px;
-      animation-delay: 0s, 1s;
+    .aurora-3 {
+      width: 800px; height: 600px;
+      bottom: -250px; left: 5%;
+      background: radial-gradient(ellipse at 55% 65%, rgba(13,148,136,0.16) 0%, rgba(253,224,71,0.09) 40%, transparent 72%);
+      animation: aurora-drift-3 30s ease-in-out infinite alternate;
     }
-    .deco-vinyl-3 { width: 180px; height: 180px; top: 40%; left: -50px;
-      animation: deco-fadeIn 2s 1.5s ease forwards, deco-spin 55s linear infinite reverse;
-    }
-
-    /* 声波线 */
-    .deco-wave {
-      position: absolute;
-      opacity: 0;
-      animation: deco-fadeIn 2s 1s ease forwards;
-    }
-    .deco-wave svg { width: 100%; height: 100%; display: block; }
-    .deco-wave-1 { top: 20%; right: -30px; width: 240px; height: 80px; }
-    .deco-wave-2 { top: 70%; left: -40px; width: 220px; height: 65px; transform: scaleX(-1); }
-
-    /* 音符 */
-    .deco-note {
-      position: absolute;
-      opacity: 0;
-      animation: deco-fadeIn 2s 0.8s ease forwards, deco-float 30s ease-in-out infinite;
-    }
-    .deco-note svg { width: 100%; height: 100%; display: block; }
-    .deco-note-1 { top: 15%; left: 5%; width: 22px; height: 22px; }
-    .deco-note-2 { top: 50%; right: 7%; width: 18px; height: 18px;
-      animation-delay: 0.8s, 5s;
-    }
-    .deco-note-3 { top: 88%; left: 10%; width: 26px; height: 26px;
-      animation-delay: 0.8s, 10s;
+    .aurora-4 {
+      width: 700px; height: 550px;
+      top: 40%; left: 35%;
+      background: radial-gradient(ellipse at 45% 50%, rgba(253,224,71,0.15) 0%, rgba(13,148,136,0.08) 50%, transparent 75%);
+      animation: aurora-drift-4 38s ease-in-out infinite alternate;
     }
 
-    /* 极简几何方块 */
-    .deco-geo {
-      position: absolute;
-      border: 1px solid rgba(13,148,136,0.04);
-      opacity: 0;
-      animation: deco-fadeIn 2s 1.2s ease forwards, deco-drift 55s ease-in-out infinite alternate;
+    @keyframes aurora-drift-1 {
+      0%   { transform: translate(0,0) scale(1); }
+      50%  { transform: translate(90px,-70px) scale(1.18); }
+      100% { transform: translate(35px,50px) scale(0.93); }
     }
-    .deco-geo-1 { width: 56px; height: 56px; top: 32%; right: 4%; border-radius: 14px; }
-    .deco-geo-2 { width: 36px; height: 36px; bottom: 22%; left: 3%; border-radius: 50%; }
-
-    @keyframes deco-spin { to { transform: rotate(360deg); } }
-    @keyframes deco-float {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      50% { transform: translateY(-55px) rotate(10deg); }
+    @keyframes aurora-drift-2 {
+      0%   { transform: translate(0,0) scale(1); }
+      50%  { transform: translate(-120px,60px) scale(1.12); }
+      100% { transform: translate(-50px,-40px) scale(1.06); }
     }
-    @keyframes deco-drift {
-      0% { transform: translate(0,0) rotate(0deg); }
-      100% { transform: translate(25px,-35px) rotate(15deg); }
+    @keyframes aurora-drift-3 {
+      0%   { transform: translate(0,0) scale(1); }
+      50%  { transform: translate(70px,-90px) scale(1.22); }
+      100% { transform: translate(-25px,60px) scale(0.88); }
     }
-    @keyframes deco-fadeIn { to { opacity: 1; } }
+    @keyframes aurora-drift-4 {
+      0%   { transform: translate(0,0) scale(1); }
+      50%  { transform: translate(-80px,-50px) scale(1.10); }
+      100% { transform: translate(60px,70px) scale(1.15); }
+    }
 
     @media (prefers-reduced-motion: reduce) {
-      .deco-vinyl, .deco-wave, .deco-note, .deco-geo {
-        animation: none !important;
-        opacity: 0 !important;
-      }
+      .aurora { animation: none !important; }
     }
 
   </style>
@@ -824,37 +799,10 @@
 <body>
   <!-- 背景装饰层（艺术感） -->
   <div class="bg-decor" aria-hidden="true">
-    <!-- 黑胶唱片 -->
-    <div class="deco-vinyl deco-vinyl-1"></div>
-    <div class="deco-vinyl deco-vinyl-2"></div>
-    <div class="deco-vinyl deco-vinyl-3"></div>
-    <!-- 声波 SVG -->
-    <div class="deco-wave deco-wave-1">
-      <svg viewBox="0 0 240 80" fill="none" stroke="rgba(13,148,136,0.45)" stroke-width="1.5" stroke-linecap="round">
-        <path d="M0,40 Q30,12 60,40 Q90,68 120,40 Q150,12 180,40 Q210,68 240,40"/>
-        <path d="M0,54 Q30,26 60,54 Q90,82 120,54 Q150,26 180,54 Q210,82 240,54" stroke-width="1" opacity="0.5"/>
-        <path d="M0,66 Q30,50 60,66 Q90,82 120,66 Q150,50 180,66 Q210,82 240,66" stroke-width="0.8" opacity="0.3"/>
-      </svg>
-    </div>
-    <div class="deco-wave deco-wave-2">
-      <svg viewBox="0 0 220 65" fill="none" stroke="rgba(13,148,136,0.4)" stroke-width="1.5" stroke-linecap="round">
-        <path d="M0,32 Q27,8 55,32 Q82,56 110,32 Q137,8 165,32 Q192,56 220,32"/>
-        <path d="M0,48 Q27,24 55,48 Q82,72 110,48 Q137,24 165,48 Q192,72 220,48" stroke-width="1" opacity="0.5"/>
-      </svg>
-    </div>
-    <!-- 音符 SVG -->
-    <div class="deco-note deco-note-1">
-      <svg viewBox="0 0 24 24" fill="rgba(13,148,136,0.5)"><path d="M12,3 L12,15 C10,13 7,13 6,14 C5,15 5,17 6,18 C7,19 9,19 10,18 L10,7 L18,9 L18,19 C16,17 13,17 12,18 C11,19 11,21 12,22 C13,23 15,23 16,22 C17,21 17,19 16,18 L16,6 Z"/></svg>
-    </div>
-    <div class="deco-note deco-note-2">
-      <svg viewBox="0 0 24 24" fill="rgba(13,148,136,0.45)"><path d="M6,3 L6,15 C4,13 2,14 2,16 C2,18 4,19 6,17 L6,7 L16,9 L16,19 C14,17 12,18 12,20 C12,22 14,23 16,21 C18,19 18,17 16,16 L16,6 Z"/></svg>
-    </div>
-    <div class="deco-note deco-note-3">
-      <svg viewBox="0 0 26 26" fill="rgba(13,148,136,0.4)"><path d="M14,2 L14,14 C12,12 9,12 8,13 C7,14 7,16 8,17 C9,18 11,18 12,17 L12,6 L20,8 L20,18 C18,16 15,16 14,17 C13,18 13,20 14,21 C15,22 17,22 18,21 C19,20 19,18 18,17 L18,5 Z"/></svg>
-    </div>
-    <!-- 几何方块 -->
-    <div class="deco-geo deco-geo-1"></div>
-    <div class="deco-geo deco-geo-2"></div>
+    <div class="aurora aurora-1"></div>
+    <div class="aurora aurora-2"></div>
+    <div class="aurora aurora-3"></div>
+    <div class="aurora aurora-4"></div>
   </div>
 
 
