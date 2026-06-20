@@ -529,6 +529,9 @@
             <p style="margin-top:8px">🔑 首次使用请在「系统设置」中配置 <strong style="color:var(--accent)">GitHub Personal Access Token</strong>（需要 <code style="background:var(--surface2);padding:2px 6px;border-radius:4px">repo</code> 权限）。</p>
             <p style="margin-top:8px">🎵 音乐作品支持 <strong style="color:var(--accent)">一键上传音频文件</strong>，在「音乐作品」页点击添加，选择文件即可自动上传到 GitHub。</p>
             <p style="margin-top:8px">🌐 保存后 GitHub Pages 会自动重新构建（约 1-2 分钟），刷新前台即可看到更新。</p>
+          </div>
+        </div>
+
         <div class="card" id="queue-history-card">
           <div class="card-title">
             保存队列记录
@@ -1581,9 +1584,10 @@ document.addEventListener('keydown', e => {
 
 // ══ Mobile Nav ══════════════════════════════════
 function toggleSidebar() {
-  const sb = document.getElementById('sidebar');
-  const ov = document.getElementById('sidebar-overlay');
-  const isOpen = sb.classList.contains('open');
+  var sb = document.getElementById('sidebar');
+  var ov = document.getElementById('sidebar-overlay');
+  if (!sb || !ov) return;
+  var isOpen = sb.classList.contains('open');
   sb.classList.toggle('open');
   ov.classList.toggle('open');
   document.body.style.overflow = isOpen ? '' : 'hidden';
@@ -1603,10 +1607,6 @@ function processQueueNow() {
   // Queue auto-processes, this just gives feedback
   updateQueueUI();
 }
-// Update mobile page title when switching pages
-const _orig_switchPage = switchPage;
-// (switchPage is redefined below to also update mobile title)
-
 
 </script>
 </body>
