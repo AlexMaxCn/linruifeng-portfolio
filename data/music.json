@@ -12,6 +12,18 @@
     "featured": true
   },
   {
+    "id": 1781942248789,
+    "cover": "images/c8247b024a8b465cf94fa50c8712d1b2.jpg",
+    "title": "Drowsy coffee",
+    "description": "轻松慵懒",
+    "composer": "林锐锋",
+    "lyricist": "林锐锋",
+    "arranger": "林锐锋",
+    "producer": "林锐锋",
+    "file": "audio/Drowsy coffee.mp3",
+    "featured": true
+  },
+  {
     "id": 2,
     "title": "Midnight Masquerade",
     "composer": "林锐锋",
@@ -21,6 +33,18 @@
     "file": "audio/Midnight_Masquerade.mp3",
     "cover": "images/99eb2dfd14a386115c227680d32902ed.jpg",
     "description": "个人原创作品，假面舞会的迷幻氛围",
+    "featured": true
+  },
+  {
+    "id": 1781943211220,
+    "cover": "images/d09ba361537b4fc06c1d35093e45bdc8.png",
+    "title": "FM.20",
+    "description": "另类摇滚",
+    "composer": "林锐锋",
+    "lyricist": "林锐锋",
+    "arranger": "林锐锋",
+    "producer": "林锐锋",
+    "file": "audio/FM.20.mp3",
     "featured": true
   },
   {
@@ -45,30 +69,6 @@
     "file": "audio/Velvet Haze.mp3",
     "cover": "images/99eb2dfd14a386115c227680d32902ed.jpg",
     "description": "70s复古合成器",
-    "featured": true
-  },
-  {
-    "id": 1781942248789,
-    "cover": "images/c8247b024a8b465cf94fa50c8712d1b2.jpg",
-    "title": "Drowsy coffee",
-    "description": "轻松慵懒",
-    "composer": "林锐锋",
-    "lyricist": "林锐锋",
-    "arranger": "林锐锋",
-    "producer": "林锐锋",
-    "file": "audio/Drowsy coffee.mp3",
-    "featured": true
-  },
-  {
-    "id": 1781943211220,
-    "cover": "images/d09ba361537b4fc06c1d35093e45bdc8.png",
-    "title": "FM.20",
-    "description": "另类摇滚",
-    "composer": "林锐锋",
-    "lyricist": "林锐锋",
-    "arranger": "林锐锋",
-    "producer": "林锐锋",
-    "file": "audio/FM.20.mp3",
     "featured": true
   }
 ]
