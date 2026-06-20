@@ -3,11 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AlexMax | 录音工程师 · 音乐制作人</title>
-  <meta name="description" content="AlexMax - 录音技术与艺术专业，专注于现场扩声、录音制作与音乐创作">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Caveat:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <title>AlexMax | 音频产品经理 · 录音工程师 · 音乐制作人</title>
+  <meta name="description" content="AlexMax - 录音技术与艺术专业，擅长现场扩声、录音制作与音乐创作，具备录音棚创业0→1实战经验，现向音频产品经理方向发展">
+
+  <!-- Open Graph / Social Sharing -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="AlexMax — 声音讲述故事">
+  <meta property="og:description" content="音频产品经理 · 录音工程师 · 音乐制作人 · 擅长现场扩声、录音制作与音乐创作">
+  <meta property="og:image" content="https://alexmaxcn.github.io/linruifeng-portfolio/og-image.png">
+  <meta property="og:url" content="https://alexmaxcn.github.io/linruifeng-portfolio/">
+  <meta property="og:site_name" content="AlexMax Portfolio">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AlexMax — 声音讲述故事">
+  <meta name="twitter:description" content="音频产品经理 · 录音工程师 · 音乐制作人">
+  <link rel="preconnect" href="https://fonts.font.im">
+  <link rel="preconnect" href="https://gstatic.font.im" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.font.im/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Caveat:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=fallback" onload="this.rel='stylesheet'">
+  <noscript><link href="https://fonts.font.im/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Caveat:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=fallback" rel="stylesheet"></noscript>
   <style>
     :root {
       --ink: #0a0a12;
@@ -24,13 +42,15 @@
       --ease: cubic-bezier(0.22, 1, 0.36, 1);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; text-size-adjust: 100%; -webkit-text-size-adjust: 100%; }
     body {
       margin: 0; color: var(--ink); background: var(--white);
-      font-family: "Noto Sans SC", "PingFang SC", sans-serif;
+      font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
       line-height: 1.7; -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
       overflow-x: hidden;
     }
+    button, input, textarea { -webkit-appearance: none; appearance: none; }
     h1,h2,h3,h4 { line-height: 1.2; font-weight: 700; }
     a { color: inherit; text-decoration: none; }
     img { max-width: 100%; display: block; }
@@ -214,11 +234,16 @@
     .viz-play-btn {
       width: 56px; height: 56px; border-radius: 50%;
       background: var(--ink); border: none; color: #fff;
-      font-size: 16px; cursor: pointer;
-      display: grid; place-items: center;
+      cursor: pointer;
+      display: grid; place-items: center; position: relative;
       box-shadow: 0 4px 16px rgba(0,0,0,0.12);
       transition: all 0.25s var(--ease);
     }
+    .viz-play-btn svg { flex-shrink: 0; }
+    .viz-play-btn.playing .icon-play { display: none; }
+    .viz-play-btn.playing .icon-pause { display: block; }
+    .viz-play-btn:not(.playing) .icon-play { display: block; }
+    .viz-play-btn:not(.playing) .icon-pause { display: none; }
     .viz-play-btn:hover { transform: scale(1.06); box-shadow: 0 6px 24px rgba(0,0,0,0.18); }
     .viz-play-btn.playing { background: var(--teal); box-shadow: 0 4px 20px rgba(13,148,136,0.35); }
 
@@ -516,9 +541,13 @@
       display: grid; place-items: center;
       border: none; border-radius: 50%;
       background: #fff; color: var(--ink);
-      cursor: pointer; font-size: 13px;
-      transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
+    .play-btn svg { flex-shrink: 0; }
+    .play-btn.playing .icon-play { display: none; }
+    .play-btn.playing .icon-pause { display: block; }
+    .play-btn:not(.playing) .icon-play { display: block; }
+    .play-btn:not(.playing) .icon-pause { display: none; }
     .play-btn:hover { transform: scale(1.08); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
     .play-btn.playing { background: var(--teal); color: #fff; }
     .track-info { flex: 1; min-width: 0; }
@@ -617,10 +646,17 @@
     @media (max-width: 520px) {
       .skills-grid { grid-template-columns: 1fr; }
       .hero-meta { flex-direction: column; gap: 16px; }
-      .hero-meta { flex-direction: column; gap: 16px; }
+      .hero h1 { font-size: clamp(32px, 9vw, 56px); }
+      .hero-desc { font-size: 15px; }
+      .section-lead { font-size: 14px; }
       .project-stats { flex-direction: column; gap: 12px; }
       .music-link { flex-direction: column; text-align: center; }
       .cta-btns { flex-direction: column; align-items: center; }
+      /* 触摸优化：增大按钮点击区域 */
+      .viz-play-btn { width: 64px; height: 64px; font-size: 18px; }
+      .viz-btn { width: 52px; height: 52px; font-size: 16px; }
+      .play-btn { width: 44px; height: 44px; font-size: 14px; }
+      .btn { padding: 14px 28px; font-size: 15px; }
     }
   </style>
 </head>
@@ -647,15 +683,15 @@
       <div>
         <div class="hero-greeting reveal">Nice to meet you, I'm</div>
         <h1 class="reveal d1">AlexMax<br><em>声音讲述故事</em></h1>
-        <p class="hero-desc reveal d2">录音技术与艺术专业，专注于现场扩声、录音制作与音乐创作。用技术捕捉声音的情感，用创意塑造听觉体验。</p>
+        <p class="hero-desc reveal d2" id="hero-desc-text">录音技术与艺术专业，擅长现场扩声、录音制作与音乐创作，同时具备录音棚创业0→1实战经验与产品思维，致力于将声音技术与产品化能力结合。</p>
         <div class="hero-cta reveal d3">
-          <a class="btn btn-primary" href="mailto:3221202923@qq.com">✉ 邮件联系</a>
+          <a class="btn btn-primary" href="mailto:3221202923@qq.com" id="hero-email-btn">✉ 邮件联系</a>
           <a class="btn btn-outline" href="#projects">查看项目 ↓</a>
         </div>
-        <div class="hero-meta reveal d3">
+        <div class="hero-meta reveal d3" id="hero-meta-container">
           <div class="hero-meta-item"><strong>4+</strong><span>项目经历</span></div>
           <div class="hero-meta-item"><strong>500+</strong><span>活动观众</span></div>
-          <div class="hero-meta-item"><strong>∞</strong><span>创作热情</span></div>
+          <div class="hero-meta-item"><strong>0→1</strong><span>创业实战</span></div>
         </div>
       </div>
       <div class="hero-visual reveal">
@@ -695,11 +731,11 @@
           </div>
           <!-- 控制面板 -->
           <div class="viz-controls">
-            <button class="viz-btn" data-action="prev" aria-label="上一首">⏮</button>
-            <button class="viz-btn" data-action="rewind" aria-label="快退10秒">↻</button>
-            <button class="viz-play-btn" id="viz-play-btn" aria-label="播放">▶</button>
-            <button class="viz-btn" data-action="forward" aria-label="快进10秒">↺</button>
-            <button class="viz-btn" data-action="next" aria-label="下一首">⏭</button>
+            <button class="viz-btn" data-action="prev" aria-label="上一首"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><polygon points="11,19 2,12 11,5"/><rect x="17" y="5" width="2" height="14" rx="1"/></svg></button>
+            <button class="viz-btn" data-action="rewind" aria-label="快退10秒"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button>
+            <button class="viz-play-btn" id="viz-play-btn" aria-label="播放"><svg class="icon-play" width="20" height="20" viewBox="0 0 24 24" fill="#fff"><polygon points="6,4 20,12 6,20"/></svg><svg class="icon-pause" width="18" height="18" viewBox="0 0 24 24" fill="#fff"><rect x="5" y="4" width="5" height="16" rx="1"/><rect x="14" y="4" width="5" height="16" rx="1"/></svg></button>
+            <button class="viz-btn" data-action="forward" aria-label="快进10秒"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg></button>
+            <button class="viz-btn" data-action="next" aria-label="下一首"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><rect x="5" y="5" width="2" height="14" rx="1"/><polygon points="13,19 22,12 13,5"/></svg></button>
           </div>
         </div>
       </div>
@@ -711,15 +747,15 @@
     <section id="about">
       <div class="section-tag reveal">About Me</div>
       <h2 class="reveal d1">关于我</h2>
-      <p class="section-lead reveal d2">录音技术与艺术专业，热爱声音技术与音乐创作，善于在团队中担任技术执行与项目协调角色。</p>
+      <p class="section-lead reveal d2" id="about-lead-text">录音技术与艺术专业，具备扎实的现场扩声、录音制作与音乐创作能力，同时拥有录音棚创业0→1实战经验，沉淀了市场调研、商务谈判与项目统筹能力。正在向音频产品经理方向发展，将声音技术专业背景与产品思维结合。</p>
       <div class="about-layout">
         <div class="profile-sidebar">
-          <div class="profile-card reveal">
-            <img class="profile-photo" src="证件照/d13cd8d20afc76ef32431b89d08d61c3.jpg" alt="AlexMax 证件照">
-            <div class="profile-name">AlexMax</div>
-            <div class="profile-name-cn">林锐锋</div>
-            <div class="profile-title">录音技术与艺术 · 广东艺术职业学院</div>
-            <div class="profile-links">
+          <div class="profile-card reveal" id="profile-card">
+            <img class="profile-photo" id="profile-photo" src="证件照/d13cd8d20afc76ef32431b89d08d61c3.jpg" alt="AlexMax 证件照">
+            <div class="profile-name" id="profile-name">AlexMax</div>
+            <div class="profile-name-cn" id="profile-name-cn">林锐锋</div>
+            <div class="profile-title" id="profile-title">音频产品经理 · 录音工程师 · 音乐制作人</div>
+            <div class="profile-links" id="profile-links">
               <a href="tel:19864292005" class="profile-link">
                 <span class="icon">📱</span>198-6429-2005
               </a>
@@ -727,38 +763,38 @@
                 <span class="icon">✉</span>3221202923@qq.com
               </a>
               <div class="profile-link">
-                <span class="icon">🎯</span>现场扩声 / 录音制作 / 音乐后期
+                <span class="icon">🎯</span>录音制作 / 现场扩声 / 音乐创作 / 音频产品经理
               </div>
             </div>
           </div>
         </div>
-        <div class="strengths-grid reveal d1">
+        <div class="strengths-grid reveal d1" id="strengths-grid">
           <div class="strength-card">
             <div class="strength-icon">🔊</div>
             <div>
               <h4>现场扩声</h4>
-              <p>大型活动音响系统搭建、调音台操作、舞台监听配置与实时混音</p>
+              <p>大型活动音响系统搭建、调音台操作、舞台监听配置，具备高压下协同作业能力</p>
             </div>
           </div>
           <div class="strength-card">
             <div class="strength-icon">🎙️</div>
             <div>
-              <h4>录音棚运营</h4>
-              <p>录音棚筹建规划、设备选型、声学环境评估与商务谈判</p>
+              <h4>录音与混音</h4>
+              <p>熟练掌握数字音频工作站、录音技术、立体声混音与扩声系统调试</p>
             </div>
           </div>
           <div class="strength-card">
-            <div class="strength-icon">🎛️</div>
+            <div class="strength-icon">🎯</div>
             <div>
-              <h4>音乐后期</h4>
-              <p>混音制作、音频编辑、AI辅助音乐创作与现代音乐制作流程</p>
+              <h4>音频产品经理</h4>
+              <p>录音棚创业0→1实战经验，掌握市场调研、需求分析、产品策划与项目统筹，擅长将音频技术能力转化为可落地的产品方案</p>
             </div>
           </div>
           <div class="strength-card">
             <div class="strength-icon">🤝</div>
             <div>
-              <h4>项目执行</h4>
-              <p>活动统筹、团队协调、商务谈判、成本控制与全流程管理</p>
+              <h4>商务与项目管理</h4>
+              <p>主导三轮商务谈判推动预算下调15%，具备独立完成商务对接、成本控制与全流程管理能力</p>
             </div>
           </div>
         </div>
@@ -769,11 +805,11 @@
     <section id="projects">
       <div class="section-tag reveal">Projects</div>
       <h2 class="reveal d1">项目经历</h2>
-      <p class="section-lead reveal d2">从校园大型晚会到原创音乐录制，再到商业录音棚筹备，经历覆盖现场、棚内与项目管理三类场景。</p>
-      <div class="projects-grid">
+      <p class="section-lead reveal d2" id="projects-lead-text">从录音棚创业0→1策划，到校园大型晚会音响执行，再到原创音乐录制，经历覆盖产品策划、项目管理与技术执行三类场景。</p>
+      <div class="projects-grid" id="projects-grid">
 
         <!-- Featured Hero Card -->
-        <article class="project-card featured reveal">
+        <article class="project-card featured reveal" data-tilt>
           <div class="featured-inner">
             <div>
               <div class="project-tags">
@@ -840,7 +876,7 @@
     <section id="skills">
       <div class="section-tag reveal">Skills</div>
       <h2 class="reveal d1">工具与专业能力</h2>
-      <div class="skills-grid">
+      <div class="skills-grid" id="skills-grid">
         <div class="skill-card reveal">
           <div class="skill-icon-wrap">🎛️</div>
           <h4>音频制作</h4>
@@ -880,13 +916,13 @@
     <section class="music-section" id="music">
       <div class="section-tag reveal">Music</div>
       <h2 class="reveal d1">原创音乐作品</h2>
-      <p class="section-lead reveal d2">使用专业 DAW 与 AI 辅助创作结合，作品发布于网易云音乐。</p>
-      <div class="music-grid">
+      <p class="section-lead reveal d2" id="music-lead-text">使用专业 DAW 与 AI 辅助创作结合，作品发布于网易云音乐。</p>
+      <div class="music-grid" id="music-grid">
         <article class="track-card reveal" data-track="1">
           <h3>Midnight Masquerade</h3>
           <p class="track-meta">电子音乐 · 编曲 / 混音</p>
           <div class="audio-player" data-src="audio/Midnight_Masquerade.mp3">
-            <button class="play-btn" aria-label="播放">▶</button>
+            <button class="play-btn" aria-label="播放"><svg class="icon-play" width="14" height="14" viewBox="0 0 24 24" fill="#0a0a12"><polygon points="6,4 20,12 6,20"/></svg><svg class="icon-pause" width="12" height="12" viewBox="0 0 24 24" fill="#fff"><rect x="5" y="4" width="5" height="16" rx="1"/><rect x="14" y="4" width="5" height="16" rx="1"/></svg></button>
             <div class="track-info">
               <div class="track-name">Midnight Masquerade</div>
               <div class="time-display">0:00 / 0:00</div>
@@ -901,7 +937,7 @@
           <h3>Chilling</h3>
           <p class="track-meta">AI辅助创作 · 编曲 / 混音</p>
           <div class="audio-player" data-src="audio/Chilling.mp3">
-            <button class="play-btn" aria-label="播放">▶</button>
+            <button class="play-btn" aria-label="播放"><svg class="icon-play" width="14" height="14" viewBox="0 0 24 24" fill="#0a0a12"><polygon points="6,4 20,12 6,20"/></svg><svg class="icon-pause" width="12" height="12" viewBox="0 0 24 24" fill="#fff"><rect x="5" y="4" width="5" height="16" rx="1"/><rect x="14" y="4" width="5" height="16" rx="1"/></svg></button>
             <div class="track-info">
               <div class="track-name">Chilling</div>
               <div class="time-display">0:00 / 0:00</div>
@@ -913,9 +949,9 @@
           </div>
         </article>
       </div>
-      <div class="music-link reveal d2">
+      <div class="music-link reveal d2" id="music-netease-link">
         <div><strong>网易云音乐人主页</strong><span>更多作品与音乐人资料可在网易云主页查看。</span></div>
-        <a class="btn" href="https://music.163.com/creator/space?followId=514557726" target="_blank" rel="noopener">访问主页 →</a>
+        <a class="btn" href="http://music.163.com/artist?id=125188447&userid=400302181" target="_blank" rel="noopener">访问主页 →</a>
       </div>
     </section>
 
@@ -923,7 +959,7 @@
     <section id="education">
       <div class="section-tag reveal">Education</div>
       <h2 class="reveal d1">教育经历</h2>
-      <div class="edu-grid">
+      <div class="edu-grid" id="edu-grid">
         <div class="edu-card reveal">
           <div class="edu-date">2023年9月 — 2026年6月（预计）</div>
           <div>
@@ -943,7 +979,7 @@
 
     <!-- CTA -->
     <section class="cta-section" id="contact">
-      <div class="reveal">
+      <div class="reveal" id="cta-content">
         <h2>欢迎联系合作</h2>
         <p>无论是演出合作、录音制作还是技术交流，都非常期待与你的沟通。</p>
         <div class="cta-btns">
@@ -957,7 +993,165 @@
   <footer>© 2026 AlexMax · Personal Homepage</footer>
 
   <script>
-    // ── Scroll Reveal ──
+    // ════════════════════════════════════════════════════════
+    // Dynamic Data Loader
+    // ════════════════════════════════════════════════════════
+    const SVG_PLAY_BTN  = '<svg class="icon-play" width="14" height="14" viewBox="0 0 24 24" fill="#0a0a12"><polygon points="6,4 20,12 6,20"/></svg>';
+    const SVG_PAUSE_BTN = '<svg class="icon-pause" width="12" height="12" viewBox="0 0 24 24" fill="#fff"><rect x="5" y="4" width="5" height="16" rx="1"/><rect x="14" y="4" width="5" height="16" rx="1"/></svg>';
+
+    const STRENGTH_ICONS = {
+      '\u97f3\u9891\u4ea7\u54c1\u7ecf\u7406': '\ud83c\udfaf',
+      '\u73b0\u573a\u6269\u58f0': '\ud83d\udd0a', '\u5f55\u97f3\u4e0e\u6df7\u97f3': '\ud83c\udf99\ufe0f', '\u5f55\u97f3\u68da\u8fd0\u8425': '\ud83c\udf99\ufe0f',
+      '\u97f3\u4e50\u540e\u671f': '\ud83c\udf9b\ufe0f', '\u9879\u76ee\u7ba1\u7406': '\ud83e\udd1d', '\u5546\u52a1\u8c08\u5224': '\ud83e\udd1d', '\u9879\u76ee\u6267\u884c': '\ud83e\udd1d',
+      '\u5546\u52a1\u4e0e\u9879\u76ee\u7ba1\u7406': '\ud83e\udd1d',
+    };
+    const SKILL_ICONS = {
+      '\u97f3\u9891\u5236\u4f5c': '\ud83c\udf9b\ufe0f', '\u73b0\u573a\u6269\u58f0': '\ud83d\udd0a', '\u89c6\u9891\u7f16\u8f91': '\ud83c\udfac', '\u56fe\u50cf\u4e0e\u8bbe\u8ba1': '\ud83c\udfa8',
+    };
+
+    let pageData = null;
+
+    async function loadData() {
+      try {
+        const results = await Promise.allSettled([
+          fetch('data/profile.json?v=' + Date.now()).then(r => r.json()),
+          fetch('data/projects.json?v=' + Date.now()).then(r => r.json()),
+          fetch('data/skills.json?v=' + Date.now()).then(r => r.json()),
+          fetch('data/music.json?v=' + Date.now()).then(r => r.json()),
+          fetch('data/education.json?v=' + Date.now()).then(r => r.json()),
+          fetch('data/strengths.json?v=' + Date.now()).then(r => r.json()),
+        ]);
+        if (results[0].status === 'fulfilled') {
+          pageData = {
+            profile:   results[0].value,
+            projects:  results[1].status === 'fulfilled' ? results[1].value : null,
+            skills:    results[2].status === 'fulfilled' ? results[2].value : null,
+            music:     results[3].status === 'fulfilled' ? results[3].value : null,
+            education: results[4].status === 'fulfilled' ? results[4].value : null,
+            strengths: results[5].status === 'fulfilled' ? results[5].value : null,
+          };
+          applyData(pageData);
+        }
+      } catch (e) {}
+      initPage();
+    }
+
+    function applyData(data) {
+      const p = data.profile;
+      if (!p) return;
+
+      const heroDesc = document.getElementById('hero-desc-text');
+      if (heroDesc && p.hero_copy) heroDesc.textContent = p.hero_copy;
+
+      const heroEmailBtn = document.getElementById('hero-email-btn');
+      if (heroEmailBtn && p.email) heroEmailBtn.href = 'mailto:' + p.email;
+
+      const heroMeta = document.getElementById('hero-meta-container');
+      if (heroMeta && p.hero_stats) {
+        heroMeta.innerHTML = p.hero_stats.map(s =>
+          '<div class="hero-meta-item"><strong>' + s.value + '</strong><span>' + s.label + '</span></div>'
+        ).join('');
+      }
+
+      const aboutLead = document.getElementById('about-lead-text');
+      if (aboutLead && p.about_lead) aboutLead.textContent = p.about_lead;
+
+      const profilePhoto = document.getElementById('profile-photo');
+      if (profilePhoto && p.photo) { profilePhoto.src = p.photo; profilePhoto.alt = (p.name || 'AlexMax') + ' \u8bc1\u4ef6\u7167'; }
+
+      const profileName = document.getElementById('profile-name');
+      if (profileName && p.name_en) profileName.textContent = p.name_en;
+
+      const profileNameCn = document.getElementById('profile-name-cn');
+      if (profileNameCn && p.name) profileNameCn.textContent = p.name;
+
+      const profileTitle = document.getElementById('profile-title');
+      if (profileTitle && p.title) profileTitle.textContent = p.title;
+
+      const profileLinks = document.getElementById('profile-links');
+      if (profileLinks) {
+        profileLinks.innerHTML =
+          '<a href="tel:' + (p.phone || '') + '" class="profile-link"><span class="icon">\ud83d\udcf1</span>' + (p.phone || '') + '</a>' +
+          '<a href="mailto:' + (p.email || '') + '" class="profile-link"><span class="icon">\u2709</span>' + (p.email || '') + '</a>' +
+          '<div class="profile-link"><span class="icon">\ud83c\udfaf</span>' + (p.direction || '') + '</div>';
+      }
+
+      const strengthsGrid = document.getElementById('strengths-grid');
+      if (strengthsGrid && data.strengths) {
+        strengthsGrid.innerHTML = data.strengths.map(function(s) {
+          var icon = STRENGTH_ICONS[s.title] || '\u2b50';
+          return '<div class="strength-card"><div class="strength-icon">' + icon + '</div><div><h4>' + s.title + '</h4><p>' + s.desc + '</p></div></div>';
+        }).join('');
+      }
+
+      const projectsGrid = document.getElementById('projects-grid');
+      if (projectsGrid && data.projects) {
+        var featured = data.projects.filter(function(pr) { return pr.featured; });
+        var regular  = data.projects.filter(function(pr) { return !pr.featured; });
+        var html = '';
+        featured.forEach(function(proj) {
+          var tagsHTML = (proj.tags || []).map(function(t) { return '<span class="project-tag">' + t + '</span>'; }).join('');
+          var bulletsHTML = (proj.bullets || []).map(function(b) { return '<li>' + b + '</li>'; }).join('');
+          var impactHTML = (proj.impact || []).map(function(i) { return '<div><strong>' + i.value + '</strong><span>' + i.label + '</span></div>'; }).join('');
+          html += '<article class="project-card featured reveal" data-tilt><div class="featured-inner"><div><div class="project-tags">' + tagsHTML + '</div><h3>' + proj.title + '</h3><p class="project-desc">' + proj.desc + '</p></div><div><ul class="featured-highlights">' + bulletsHTML + '</ul>' + (impactHTML ? '<div class="project-stats">' + impactHTML + '</div>' : '') + '</div></div></article>';
+        });
+        if (regular.length > 0) {
+          html += '<div class="projects-cards-row">';
+          regular.forEach(function(proj, i) {
+            var tagsHTML = (proj.tags || []).map(function(t) { return '<span class="project-tag">' + t + '</span>'; }).join('');
+            var delay = i > 0 ? ' d' + Math.min(i, 3) : '';
+            html += '<article class="project-card reveal' + delay + '" data-tilt><div class="project-card-body"><div class="project-tags">' + tagsHTML + '</div><h3>' + proj.title + '</h3><p class="project-desc">' + proj.desc + '</p></div></article>';
+          });
+          html += '</div>';
+        }
+        projectsGrid.innerHTML = html;
+      }
+
+      const skillsGrid = document.getElementById('skills-grid');
+      if (skillsGrid && data.skills) {
+        skillsGrid.innerHTML = data.skills.map(function(s, i) {
+          var icon = SKILL_ICONS[s.category] || '\u2b50';
+          var delay = i > 0 ? ' d' + Math.min(i, 3) : '';
+          var tags = (s.items || []).map(function(it) { return '<span>' + it + '</span>'; }).join('');
+          return '<div class="skill-card reveal' + delay + '"><div class="skill-icon-wrap">' + icon + '</div><h4>' + s.category + '</h4><p>' + s.desc + '</p><div class="skill-tags">' + tags + '</div></div>';
+        }).join('');
+      }
+
+      const musicLead = document.getElementById('music-lead-text');
+      if (musicLead && p.music_section_lead) musicLead.textContent = p.music_section_lead;
+
+      const musicGrid = document.getElementById('music-grid');
+      if (musicGrid && data.music) {
+        musicGrid.innerHTML = data.music.map(function(m, i) {
+          var delay = i > 0 ? ' d' + i : '';
+          var meta = [m.description || '', m.arranger ? '\u7f16\u66f2 / \u6df7\u97f3' : ''].filter(Boolean).join(' \u00b7 ');
+          return '<article class="track-card reveal' + delay + '" data-track="' + m.id + '"><h3>' + m.title + '</h3><p class="track-meta">' + meta + '</p><div class="audio-player" data-src="' + m.file + '"><button class="play-btn" aria-label="\u64ad\u653e">' + SVG_PLAY_BTN + SVG_PAUSE_BTN + '</button><div class="track-info"><div class="track-name">' + m.title + '</div><div class="time-display">0:00 / 0:00</div></div><div class="progress-wrap"><div class="progress-track"><div class="progress-fill"></div><div class="progress-thumb" style="left:0%"></div></div></div><a class="dl-btn" href="' + m.file + '" download title="\u4e0b\u8f7d">\u2193</a></div></article>';
+        }).join('');
+      }
+
+      const neteaseLink = document.getElementById('music-netease-link');
+      if (neteaseLink && p.netease_url) {
+        var btn = neteaseLink.querySelector('a');
+        if (btn) btn.href = p.netease_url;
+      }
+
+      const eduGrid = document.getElementById('edu-grid');
+      if (eduGrid && data.education) {
+        eduGrid.innerHTML = data.education.map(function(e, i) {
+          var delay = i > 0 ? ' d' + i : '';
+          return '<div class="edu-card reveal' + delay + '"><div class="edu-date">' + e.period + '</div><div><h3>' + e.school + ' \u00b7 ' + e.degree + ' \u00b7 ' + e.major + '</h3><p>' + e.desc + '</p></div></div>';
+        }).join('');
+      }
+
+      const ctaContent = document.getElementById('cta-content');
+      if (ctaContent) {
+        ctaContent.innerHTML = '<h2>' + (p.cta_title || '\u6b22\u8fce\u8054\u7cfb\u5408\u4f5c') + '</h2><p>' + (p.cta_desc || '') + '</p><div class="cta-btns"><a class="btn btn-primary" href="mailto:' + (p.email || '') + '">\u2709 ' + (p.email || '') + '</a><a class="btn btn-outline" href="tel:' + (p.phone || '') + '" style="color:rgba(255,255,255,0.8); border-color:rgba(255,255,255,0.2);">\ud83d\udcf1 ' + (p.phone || '') + '</a></div>';
+      }
+    }
+
+    function initPage() {
+
+    // Scroll Reveal
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) entry.target.classList.add('visible');
@@ -965,13 +1159,13 @@
     }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-    // ── Nav scroll ──
+    // Nav scroll
     const nav = document.getElementById('main-nav');
     window.addEventListener('scroll', () => {
       nav.classList.toggle('scrolled', window.scrollY > 40);
     }, { passive: true });
 
-    // ── Smooth scroll ──
+    // Smooth scroll
     document.querySelectorAll('a[href^="#"]').forEach(a => {
       a.addEventListener('click', e => {
         e.preventDefault();
@@ -980,7 +1174,34 @@
       });
     });
 
-    // ── Custom Audio Player ──
+    // Shared Audio Player
+    window.__sharedPlayer = {
+      audio: new Audio(),
+      currentTrack: null,
+      isPlaying: false,
+      source: null,
+      uiCallbacks: [],
+      init() {
+        this.audio.preload = 'metadata';
+        this.audio.addEventListener('timeupdate', () => { this.notifyUI('timeupdate'); });
+        this.audio.addEventListener('ended', () => { this.isPlaying = false; this.notifyUI('ended'); });
+        this.audio.addEventListener('loadedmetadata', () => { this.notifyUI('loadedmetadata'); });
+      },
+      registerUI(callback) { this.uiCallbacks.push(callback); },
+      notifyUI(event) { this.uiCallbacks.forEach(cb => cb(this, event)); },
+      play(track, source) {
+        if (this.isPlaying) this.audio.pause();
+        if (!this.currentTrack || this.currentTrack.src !== track.src) {
+          this.audio.src = track.src; this.currentTrack = track;
+        }
+        this.source = source;
+        this.audio.play().then(() => { this.isPlaying = true; this.notifyUI('play'); }).catch(() => {});
+      },
+      pause() { this.audio.pause(); this.isPlaying = false; this.notifyUI('pause'); }
+    };
+    window.__sharedPlayer.init();
+
+    // Custom Audio Player (Music)
     document.querySelectorAll('.audio-player').forEach(player => {
       const btn = player.querySelector('.play-btn');
       const fill = player.querySelector('.progress-fill');
@@ -988,281 +1209,112 @@
       const timeEl = player.querySelector('.time-display');
       const wrap = player.querySelector('.progress-wrap');
       const src = player.dataset.src;
-      const audio = new Audio(src);
-      let playing = false;
-
-      audio.preload = 'metadata';
-
-      const fmt = s => {
-        if (!s || isNaN(s)) return '0:00';
-        const m = Math.floor(s / 60);
-        const sec = Math.floor(s % 60);
-        return m + ':' + (sec < 10 ? '0' : '') + sec;
-      };
-
-      audio.addEventListener('loadedmetadata', () => {
-        timeEl.textContent = '0:00 / ' + fmt(audio.duration);
-      });
-
-      audio.addEventListener('timeupdate', () => {
-        if (!audio.duration) return;
-        const pct = (audio.currentTime / audio.duration) * 100;
-        fill.style.width = pct + '%';
-        thumb.style.left = pct + '%';
-        timeEl.textContent = fmt(audio.currentTime) + ' / ' + fmt(audio.duration);
-      });
-
-      audio.addEventListener('ended', () => {
-        playing = false;
-        btn.textContent = '▶';
-        btn.classList.remove('playing');
-        fill.style.width = '0%';
-        thumb.style.left = '0%';
-      });
-
-      btn.addEventListener('click', () => {
-        if (playing) {
-          audio.pause();
-          playing = false;
-          btn.textContent = '▶';
-          btn.classList.remove('playing');
-        } else {
-          /* 双向联动：播放前暂停 Hero 播放器 */
-          if (window.__pauseHeroPlayer) window.__pauseHeroPlayer();
-
-          document.querySelectorAll('.audio-player').forEach(p => {
-            if (p !== player) {
-              const a = p._audio;
-              if (a) { a.pause(); p._playing = false; p.querySelector('.play-btn').textContent = '▶'; p.querySelector('.play-btn').classList.remove('playing'); }
-            }
-          });
-          audio.play();
-          playing = true;
-          btn.textContent = '⏸';
-          btn.classList.add('playing');
+      const trackName = player.querySelector('.track-name').textContent;
+      const sp = window.__sharedPlayer;
+      let lastPct = -1;
+      const fmt = s => { if (!s || isNaN(s)) return '0:00'; const m = Math.floor(s/60), sec = Math.floor(s%60); return m+':'+String(sec).padStart(2,'0'); };
+      sp.registerUI((player, event) => {
+        if (!player.currentTrack || player.currentTrack.src !== src) {
+          fill.style.width='0%'; thumb.style.left='0%'; btn.classList.remove('playing'); timeEl.textContent='0:00 / 0:00'; return;
         }
+        if (player.audio.duration) {
+          const pct = (player.audio.currentTime / player.audio.duration) * 100;
+          if (Math.abs(pct - lastPct) > 0.5 || pct < 1 || pct > 99) {
+            fill.style.width = pct+'%'; thumb.style.left = pct+'%'; lastPct = pct;
+          }
+          timeEl.textContent = fmt(player.audio.currentTime) + ' / ' + fmt(player.audio.duration);
+        }
+        btn.classList.toggle('playing', player.isPlaying);
       });
-
+      btn.addEventListener('click', () => {
+        const track = { name: trackName, src: src };
+        if (sp.isPlaying && sp.currentTrack && sp.currentTrack.src === src) { sp.pause(); }
+        else { sp.play(track, 'music'); }
+      });
       wrap.addEventListener('click', e => {
-        if (!audio.duration) return;
+        if (!sp.currentTrack || sp.currentTrack.src !== src) return;
+        if (!sp.audio.duration) return;
         const rect = wrap.getBoundingClientRect();
         const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-        audio.currentTime = pct * audio.duration;
+        sp.audio.currentTime = pct * sp.audio.duration;
       });
-
-      player._audio = audio;
-      player._playing = playing;
     });
 
-    // ── Hero Player (Interactive Recorder) ──
+    // Hero Player
     (() => {
-      const TRACKS = [
-        { name: 'Midnight Masquerade', src: 'audio/Midnight_Masquerade.mp3', genre: '电子音乐' },
-        { name: 'Chilling',              src: 'audio/Chilling.mp3',              genre: 'AI辅助创作' },
-      ];
-
-      let currentIdx  = -1;   // -1 = 未开始
-      let audio       = null;
-      let playing     = false;
-      let animFrame   = null;
-
-      /* DOM */
-      const btnPlay     = document.getElementById('viz-play-btn');
-      const elName      = document.getElementById('viz-track-name');
-      const elStatus    = document.querySelector('.viz-status');
-      const elTime      = document.getElementById('viz-time');
-      const elFill      = document.getElementById('viz-progress-fill');
-      const elBars      = document.getElementById('viz-bars');
-      const buttons     = document.querySelectorAll('.viz-btn');
-
-      /* ── helpers ── */
-      const fmt = s => {
-        if (!s || isNaN(s)) return '0:00';
-        const m = Math.floor(s / 60);
-        const sec = Math.floor(s % 60);
-        return m + ':' + String(sec).padStart(2, '0');
-      };
-
-      const pickRandom = () => {
-        let next;
-        do { next = Math.floor(Math.random() * TRACKS.length); } while (next === currentIdx && TRACKS.length > 1);
-        return next;
-      };
-
-      /* ── load & play ── */
-      const loadTrack = idx => {
-        if (idx < 0 || idx >= TRACKS.length) return;
-        currentIdx = idx;
-        const track = TRACKS[idx];
-
-        /* 停止旧音频 */
-        if (audio) { audio.pause(); audio.currentTime = 0; }
-
-        audio = new Audio(track.src);
-        audio.volume = 0.75;
-
-        elName.textContent = track.name;
-        elStatus.textContent = '已加载';
-        elTime.textContent = '0:00 / 0:00';
-        elFill.style.width = '0%';
-
-        audio.addEventListener('loadedmetadata', () => {
-          elTime.textContent = '0:00 / ' + fmt(audio.duration);
-        });
-
-        audio.addEventListener('timeupdate', () => {
-          if (!audio.duration) return;
-          const pct = (audio.currentTime / audio.duration * 100).toFixed(1);
-          elFill.style.width = pct + '%';
-          elTime.textContent = fmt(audio.currentTime) + ' / ' + fmt(audio.duration);
-        });
-
-        audio.addEventListener('ended', () => {
-          playing = false;
-          updatePlayBtn();
-          stopVizBars();
-          /* 自动下一首（随机）*/
-          loadTrack(pickRandom());
-          playTrack();
-        });
-      };
-
-      const playTrack = () => {
-        if (!audio) { loadTrack(pickRandom()); }
-
-        /* 双向联动：播放前暂停 Music 区域所有播放器 */
-        document.querySelectorAll('.audio-player').forEach(p => {
-          const a = p._audio;
-          if (a && p._playing) {
-            a.pause();
-            p._playing = false;
-            const b = p.querySelector('.play-btn');
-            if (b) { b.textContent = '▶'; b.classList.remove('playing'); }
-          }
-        });
-
-        audio.play().then(() => {
-          playing = true;
-          updatePlayBtn();
-          elStatus.textContent = '播放中';
-          startVizBars();
-        }).catch(() => { /* 用户未交互，忽略 */ });
-      };
-
-      const pauseTrack = () => {
-        if (!audio) return;
-        audio.pause();
-        playing = false;
-        updatePlayBtn();
-        elStatus.textContent = '已暂停';
-        stopVizBars();
-      };
-
-      const updatePlayBtn = () => {
-        btnPlay.textContent = playing ? '⏸' : '▶';
-        btnPlay.classList.toggle('playing', playing);
-      };
-
-      /* ── 快进 / 快退 ── */
-      const rewind10 = () => {
-        if (!audio) return;
-        audio.currentTime = Math.max(0, audio.currentTime - 10);
-      };
-      const forward10 = () => {
-        if (!audio) return;
-        audio.currentTime = Math.min(audio.duration || Infinity, audio.currentTime + 10);
-      };
-
-      /* ── 上一首 / 下一首 ── */
-      const prevTrack = () => {
-        const wasPlaying = playing;
-        if (wasPlaying) pauseTrack();
-        loadTrack(pickRandom());   /* 随机切换 */
-        if (wasPlaying) playTrack();
-      };
-      const nextTrack = () => {
-        const wasPlaying = playing;
-        if (wasPlaying) pauseTrack();
-        loadTrack(pickRandom());
-        if (wasPlaying) playTrack();
-      };
-
-      /* ── 可视化柱状图动画 ── */
+      let TRACKS;
+      if (pageData && pageData.music) {
+        TRACKS = pageData.music.map(m => ({ name: m.title, src: m.file, genre: m.description || '' }));
+      } else {
+        TRACKS = [
+          { name: 'Midnight Masquerade', src: 'audio/Midnight_Masquerade.mp3', genre: '\u7535\u5b50\u97f3\u4e50' },
+          { name: 'Chilling', src: 'audio/Chilling.mp3', genre: 'AI\u8f85\u52a9\u521b\u4f5c' },
+        ];
+      }
+      let currentIdx = -1;
+      const btnPlay = document.getElementById('viz-play-btn');
+      const elName = document.getElementById('viz-track-name');
+      const elStatus = document.querySelector('.viz-status');
+      const elTime = document.getElementById('viz-time');
+      const elFill = document.getElementById('viz-progress-fill');
+      const elBars = document.getElementById('viz-bars');
+      const buttons = document.querySelectorAll('.viz-btn');
+      const sp = window.__sharedPlayer;
+      const fmt = s => { if (!s || isNaN(s)) return '0:00'; const m = Math.floor(s/60), sec = Math.floor(s%60); return m+':'+String(sec).padStart(2,'0'); };
+      const pickRandom = () => { let next; do { next = Math.floor(Math.random() * TRACKS.length); } while (next === currentIdx && TRACKS.length > 1); return next; };
+      let animFrame = null;
       const startVizBars = () => {
         elBars.classList.add('active');
         const bars = elBars.querySelectorAll('.viz-bar');
-        const step = () => {
-          bars.forEach(bar => {
-            const h = 20 + Math.random() * 80;
-            bar.style.transform = 'scaleY(' + (h / 100) + ')';
-          });
-          animFrame = requestAnimationFrame(() => setTimeout(step, 120));
-        };
-        step();
+        const step = () => { bars.forEach(bar => { bar.style.transform = 'scaleY(' + ((20+Math.random()*80)/100) + ')'; }); animFrame = requestAnimationFrame(() => setTimeout(step, 120)); };
+        if (!animFrame) step();
       };
-
-      const stopVizBars = () => {
-        if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
-        elBars.classList.remove('active');
-        const bars = elBars.querySelectorAll('.viz-bar');
-        bars.forEach(bar => { bar.style.transform = 'scaleY(0.35)'; });
-      };
-
-      /* ── 按钮事件 ── */
-      btnPlay.addEventListener('click', () => {
-        if (playing) { pauseTrack(); }
-        else        { playTrack(); }
+      const stopVizBars = () => { if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; } elBars.classList.remove('active'); elBars.querySelectorAll('.viz-bar').forEach(b => { b.style.transform = 'scaleY(0.35)'; }); };
+      sp.registerUI((player, event) => {
+        const track = player.currentTrack; if (!track) return;
+        elName.textContent = track.name;
+        if (player.audio.duration) { const pct = (player.audio.currentTime/player.audio.duration)*100; elFill.style.width = pct.toFixed(1)+'%'; elTime.textContent = fmt(player.audio.currentTime)+' / '+fmt(player.audio.duration); }
+        btnPlay.classList.toggle('playing', player.isPlaying);
+        elStatus.textContent = player.isPlaying ? '\u64ad\u653e\u4e2d' : '\u5df2\u6682\u505c';
+        if (player.isPlaying) startVizBars(); else stopVizBars();
       });
-
+      sp.audio.addEventListener('ended', () => { if (sp.source === 'hero') { const idx = pickRandom(); currentIdx = idx; sp.play(TRACKS[idx], 'hero'); } });
+      const loadTrack = idx => { if (idx >= 0 && idx < TRACKS.length) currentIdx = idx; };
+      btnPlay.addEventListener('click', () => { if (sp.isPlaying && sp.source === 'hero') { sp.pause(); } else { sp.play(TRACKS[currentIdx === -1 ? 0 : currentIdx], 'hero'); } });
       buttons.forEach(btn => {
         btn.addEventListener('click', () => {
           const action = btn.dataset.action;
-          if (action === 'prev')     prevTrack();
-          if (action === 'next')     nextTrack();
-          if (action === 'rewind')  rewind10();
-          if (action === 'forward')  forward10();
+          if (action === 'prev' || action === 'next') { const idx = pickRandom(); loadTrack(idx); if (sp.isPlaying && sp.source === 'hero') sp.play(TRACKS[idx], 'hero'); }
+          if (action === 'rewind') sp.audio.currentTime = Math.max(0, sp.audio.currentTime - 10);
+          if (action === 'forward') sp.audio.currentTime = Math.min(sp.audio.duration || Infinity, sp.audio.currentTime + 10);
         });
       });
-
-      /* 页面加载后预加载第一首（不自动播放）*/
       loadTrack(0);
-
-      /* 暴露暂停函数，供 Music 区域播放器调用（双向联动）*/
-      window.__pauseHeroPlayer = pauseTrack;
+      window.__pauseHeroPlayer = () => { if (sp.isPlaying && sp.source === 'hero') sp.pause(); };
     })();
 
-    // ── Cursor Tilt Effect on Project Cards ──
+    // Cursor Tilt
     document.querySelectorAll('[data-tilt]').forEach(card => {
       const handleMove = (e) => {
         const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-
-        /* Tilt: max ±6deg */
-        const rotateX = ((y - centerY) / centerY) * -6;
-        const rotateY = ((x - centerX) / centerX) * 6;
-
-        card.style.transform =
-          `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02,1.02,1.02)`;
-
-        /* Spotlight: CSS custom property for radial-gradient position */
-        const pctX = (x / rect.width) * 100;
-        const pctY = (y / rect.height) * 100;
-        card.style.setProperty('--mouse-x', pctX + '%');
-        card.style.setProperty('--mouse-y', pctY + '%');
+        const x = e.clientX - rect.left, y = e.clientY - rect.top;
+        const centerX = rect.width / 2, centerY = rect.height / 2;
+        const rotateX = ((y - centerY) / centerY) * -6, rotateY = ((x - centerX) / centerX) * 6;
+        card.style.transform = 'perspective(800px) rotateX(' + rotateX + 'deg) rotateY(' + rotateY + 'deg) scale3d(1.02,1.02,1.02)';
+        card.style.setProperty('--mouse-x', (x / rect.width * 100) + '%');
+        card.style.setProperty('--mouse-y', (y / rect.height * 100) + '%');
       };
-
       const handleLeave = () => {
         card.style.transform = 'perspective(800px) rotateX(0) rotateY(0) scale3d(1,1,1)';
-        card.style.removeProperty('--mouse-x');
-        card.style.removeProperty('--mouse-y');
+        card.style.removeProperty('--mouse-x'); card.style.removeProperty('--mouse-y');
       };
-
       card.addEventListener('mousemove', handleMove);
       card.addEventListener('mouseleave', handleLeave);
     });
+
+    } // end initPage()
+
+    loadData();
   </script>
 </body>
 </html>
