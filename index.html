@@ -348,6 +348,7 @@
       animation: viz-pulse 1.6s ease-in-out infinite;
       animation-delay: calc(var(--i) * -78ms);
       transform-origin: bottom;
+      will-change: transform;
     }
     @keyframes viz-pulse { 0%,100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
     .viz-bars.active .viz-bar { animation: none; transform: scaleY(0.35); }
@@ -736,6 +737,7 @@
     .track-cover img {
       width: 100%; height: 100%; object-fit: cover; display: block;
       transition: transform 0.6s var(--ease);
+      will-change: transform;
     }
     .track-card:hover .track-cover img { transform: scale(1.04); }
     .track-cover-placeholder {
@@ -1484,7 +1486,7 @@
           var meta = [m.description || m.desc || '', m.arranger ? '\u7f16\u66f2 / \u6df7\u97f3' : ''].filter(Boolean).join(' \u00b7 ');
           var coverSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>';
           var coverHtml = m.cover
-            ? '<div class="track-cover"><img src="' + m.cover + '" alt="' + m.title + ' \u4e13\u8f91\u5c01\u9762" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'"><div class="track-cover-placeholder" style="display:none">' + coverSvg + '</div></div>'
+            ? '<div class="track-cover"><img src="' + m.cover + '" alt="' + m.title + ' 专辑封面" loading="lazy" decoding="async" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'"><div class="track-cover-placeholder" style="display:none">' + coverSvg + '</div></div>'
             : '<div class="track-cover"><div class="track-cover-placeholder">' + coverSvg + '</div></div>';
           return '<article class="track-card reveal' + delay + '" data-track="' + m.id + '">' + coverHtml + '<h3>' + m.title + '</h3><p class="track-meta">' + meta + '</p><div class="audio-player" data-src="' + m.file + '"><button class="play-btn" aria-label="\u64ad\u653e">' + SVG_PLAY_BTN + SVG_PAUSE_BTN + '</button><div class="track-info"><div class="track-name">' + m.title + '</div><div class="time-display">0:00 / 0:00</div></div><div class="progress-wrap"><div class="progress-track"><div class="progress-fill"></div><div class="progress-thumb" style="left:0%"></div></div></div><a class="dl-btn" href="' + m.file + '" download title="\u4e0b\u8f7d">\u2193</a></div></article>';
         }).join('');
@@ -1536,10 +1538,17 @@
     });
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-    // Nav scroll
+    // Nav scroll — rAF throttle for mobile perf
     const nav = document.getElementById('main-nav');
+    let scrollTicking = false;
     window.addEventListener('scroll', () => {
-      nav.classList.toggle('scrolled', window.scrollY > 40);
+      if (!scrollTicking) {
+        scrollTicking = true;
+        requestAnimationFrame(() => {
+          nav.classList.toggle('scrolled', window.scrollY > 40);
+          scrollTicking = false;
+        });
+      }
     }, { passive: true });
 
     // Smooth scroll
@@ -1560,8 +1569,16 @@
       uiCallbacks: [],
       init() {
         this.audio.preload = 'metadata';
-        this.audio.addEventListener('timeupdate', () => { this.notifyUI('timeupdate'); });
-        this.audio.addEventListener('ended', () => { this.isPlaying = false; this.notifyUI('ended'); });
+        this._timeUpdateRaf = null;
+        this.audio.addEventListener('timeupdate', () => {
+          if (this._timeUpdateRaf) return;
+          this._timeUpdateRaf = requestAnimationFrame(() => {
+            this.notifyUI('timeupdate');
+            this._timeUpdateRaf = null;
+          });
+        });
+        this.audio.addEventListener('ended', () => { this.isPlaying = false; this._timeUpdateRaf = null; this.notifyUI('ended'); });
+        this.audio.addEventListener('pause', () => { this._timeUpdateRaf = null; });
         this.audio.addEventListener('loadedmetadata', () => { this.notifyUI('loadedmetadata'); });
       },
       registerUI(callback) { this.uiCallbacks.push(callback); },
@@ -1706,6 +1723,20 @@
     });
 
     } // end initPage()
+
+    // Pause aurora CSS animation when hero is off-screen — mobile GPU perf win
+    (() => {
+      const hero = document.querySelector('.hero-section');
+      if (!hero) return;
+      const auroraEls = document.querySelectorAll('.aurora');
+      const io = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          const state = entry.isIntersecting ? '' : 'paused';
+          auroraEls.forEach(el => { el.style.animationPlayState = state; });
+        });
+      }, { threshold: 0 });
+      io.observe(hero);
+    })();
 
     loadData();
   </script>
