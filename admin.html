@@ -33,9 +33,9 @@
       background: var(--bg);
     }
     .login-box {
-      width: 380px; padding: 40px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; box-shadow: 0 40px 80px rgba(0,0,0,.5);
+      width: 380px; padding: 44px 40px;
+      background: var(--surface); border: 1px solid rgba(13,148,136,.12);
+      border-radius: 20px; box-shadow: 0 40px 80px rgba(0,0,0,.6), 0 0 60px rgba(13,148,136,.06);
     }
     .login-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
     .login-logo .mark {
@@ -62,7 +62,7 @@
     .login-err { color: var(--danger); font-size: 13px; margin-top: 10px; display: none; }
 
     /* ── App Shell ── */
-    #app { display: none; min-height: 100vh; }
+    #app { display: none; min-height: 100vh; position: relative; z-index: 1; }
     .shell { display: flex; min-height: 100vh; }
 
     /* ── Sidebar ── */
@@ -90,7 +90,7 @@
       border: none; background: none; width: 100%; text-align: left;
     }
     .nav-item:hover { background: var(--surface2); color: var(--text); }
-    .nav-item.active { background: var(--accent-light); color: var(--accent); }
+    .nav-item.active { background: var(--accent-light); color: var(--accent); border-left: 3px solid var(--accent); padding-left: 7px; }
     .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
     .sidebar-footer {
       padding: 14px 10px;
@@ -102,9 +102,10 @@
     .topbar {
       position: sticky; top: 0; z-index: 10;
       padding: 14px 28px;
-      background: rgba(15,19,24,.92); backdrop-filter: blur(12px);
+      background: rgba(11,14,19,.94); backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
       display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      box-shadow: 0 1px 12px rgba(0,0,0,.3);
     }
     .topbar-title { font-size: 18px; font-weight: 700; }
     .topbar-actions { display: flex; gap: 10px; align-items: center; }
@@ -113,7 +114,8 @@
       border-radius: 8px; color: #fff; font-size: 14px; font-weight: 700;
       cursor: pointer; transition: opacity .2s;
     }
-    .btn-save:hover { opacity: .88; }
+.btn-save { transition: opacity .2s, box-shadow .2s; }
+    .btn-save:hover { opacity: .88; box-shadow: 0 4px 16px rgba(13,148,136,.25); }
     .btn-outline {
       padding: 8px 16px; background: transparent;
       border: 1px solid var(--border); border-radius: 8px;
@@ -132,13 +134,16 @@
 
     /* ── Page Content ── */
     .page { display: none; padding: 28px; max-width: 860px; }
-    .page.active { display: block; }
+    .page.active { display: block; animation: fadeIn .25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
     /* ── Cards / Sections ── */
     .card {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+      transition: border-color .25s, box-shadow .25s;
     }
+    .card:hover { border-color: rgba(13,148,136,.25); box-shadow: 0 0 20px rgba(13,148,136,.04); }
     .card-title {
       font-size: 15px; font-weight: 700; margin-bottom: 18px;
       padding-bottom: 14px; border-bottom: 1px solid var(--border);
@@ -156,6 +161,7 @@
     }
     .field input:focus, .field textarea:focus, .field select:focus {
       outline: none; border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(13,148,136,.10);
     }
     .field textarea { resize: vertical; min-height: 88px; line-height: 1.6; }
     .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -196,10 +202,10 @@
     }
     .modal-overlay.open { display: flex; }
     .modal {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 14px; width: 100%; max-width: 600px;
+      background: var(--surface); border: 1px solid rgba(13,148,136,.15);
+      border-radius: 16px; width: 100%; max-width: 620px;
       max-height: 90vh; overflow-y: auto;
-      box-shadow: 0 40px 80px rgba(0,0,0,.5);
+      box-shadow: 0 40px 80px rgba(0,0,0,.6), 0 0 40px rgba(13,148,136,.06);
     }
     .modal-head {
       padding: 20px 24px 16px;
@@ -377,10 +383,29 @@
       .modal-foot { padding: 14px 20px; }
       .modal-foot .btn-outline { order: 2; flex: 1; }
       .modal-foot .btn-save { order: 1; flex: 2; }
+      .modal-back { display: grid !important; }
     }
-  </style>
+  
+    /* ── Queue History Panel ── */
+    .queue-log { max-height: 320px; overflow-y: auto; margin-top: 12px; }
+    .queue-log-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; border-radius: 6px;
+      font-size: 13px; margin-bottom: 4px;
+      background: var(--surface2);
+    }
+    .queue-log-item .status-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .queue-log-item .status-dot.ok { background: var(--success); }
+    .queue-log-item .status-dot.err { background: var(--danger); }
+    .queue-log-item .q-filename { font-weight: 600; color: var(--text); flex: 1; }
+    .queue-log-item .q-time { color: var(--muted); font-size: 12px; }
+    .queue-log-item.err .q-filename { color: var(--danger); }
+</style>
 </head>
 <body>
+  <div aria-hidden="true" style="position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 55% 45% at 15% 8%,rgba(13,148,136,.04) 0%,transparent 70%),radial-gradient(ellipse 45% 35% at 85% 92%,rgba(217,119,6,.03) 0%,transparent 70%);"></div>
 
 <!-- ══ LOGIN ══════════════════════════════════════════ -->
 <div id="login-screen">
@@ -488,7 +513,13 @@
             <p style="margin-top:8px">🔑 首次使用请在「系统设置」中配置 <strong style="color:var(--accent)">GitHub Personal Access Token</strong>（需要 <code style="background:var(--surface2);padding:2px 6px;border-radius:4px">repo</code> 权限）。</p>
             <p style="margin-top:8px">🎵 音乐作品支持 <strong style="color:var(--accent)">一键上传音频文件</strong>，在「音乐作品」页点击添加，选择文件即可自动上传到 GitHub。</p>
             <p style="margin-top:8px">🌐 保存后 GitHub Pages 会自动重新构建（约 1-2 分钟），刷新前台即可看到更新。</p>
+        <div class="card" id="queue-history-card">
+          <div class="card-title">
+            保存队列记录
+            <button class="btn-outline" style="font-size:12px;padding:4px 10px" onclick="clearQueueHistory()">清空记录</button>
           </div>
+          <div class="queue-log" id="queue-log"></div>
+          <div id="queue-log-empty" style="color:var(--muted);font-size:13px;padding:8px 0;display:none">暂无保存记录</div>
         </div>
       </div>
 
@@ -639,6 +670,7 @@
 <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
   <div class="modal" id="modal">
     <div class="modal-head">
+      <button class="modal-back" onclick="closeModal()" style="display:none;width:30px;height:30px;border:none;background:var(--surface2);border-radius:6px;color:var(--text);cursor:pointer;font-size:18px;align-items:center;justify-content:center">←</button>
       <h3 id="modal-title">编辑</h3>
       <button class="modal-close" onclick="closeModal()">×</button>
     </div>
@@ -674,8 +706,15 @@ const DATA_FILES = {
 
 // ══ Save Queue System ═════════════════════════════════
 window._saveQueue = [];
-window.window._saveQueueRunning = false;
-window.window._buildDebounceTimer = null;
+window._saveQueueRunning = false;
+window._buildDebounceTimer = null;
+window._queueHistory = [];  // { filename, status, time }
+function addQueueRecord(filename, status) {
+  window._queueHistory.unshift({ filename, status, time: new Date().toLocaleTimeString() });
+  if (window._queueHistory.length > 50) window._queueHistory.pop();
+  updateQueueHistoryUI();
+}
+
 
 function enqueueSave(filename, data, showToastMsg) {
   return new Promise((resolve, reject) => {
@@ -693,8 +732,10 @@ async function processQueue() {
   try {
     const result = await _doSaveToGitHub(filename, data, showToastMsg);
     resolve(result);
+    addQueueRecord(filename, "success");
   } catch(e) {
     reject(e);
+    addQueueRecord(filename, "error: " + e.message);
   }
   // Debounce build trigger: wait 2s after last save, then trigger once
   clearTimeout(window._buildDebounceTimer);
@@ -726,6 +767,29 @@ async function triggerBuildSilent() {
       method: 'POST', headers: { Authorization: `token ${token}` }
     });
   } catch(e) {}
+}
+
+// ══ Queue History UI ════════════════════════════════════
+function updateQueueHistoryUI() {
+  const log = document.getElementById("queue-log");
+  const empty = document.getElementById("queue-log-empty");
+  if (!log) return;
+  if (window._queueHistory.length === 0) {
+    log.innerHTML = ""; empty.style.display = "block"; return;
+  }
+  empty.style.display = "none";
+  log.innerHTML = window._queueHistory.map(r => {
+    const isOk = r.status === "success";
+    return `<div class="queue-log-item${isOk?"":" err"}">
+      <span class="status-dot ${isOk?"ok":"err"}"></span>
+      <span class="q-filename">${r.filename}</span>
+      <span style="font-size:12px;color:var(--muted);flex-shrink:0">${r.status}</span>
+      <span class="q-time">${r.time}</span>
+    </div>`).join("");
+};
+function clearQueueHistory() {
+  window._queueHistory = [];
+  updateQueueHistoryUI();
 }
 
 // ══ Replaced saveToGitHub (now just enqueues) ══
@@ -924,76 +988,6 @@ function base64Encode(str) {
   return btoa(unescape(encodeURIComponent(str)));
 }
 
-// ══ Save to GitHub (带 SHA 重试) ══════════════════════════
-async function saveToGitHub(filename, data, showToastMsg = true) {
-  const token = getToken();
-  if (!token) {
-    showToast('请先在「系统设置」中配置 GitHub Token', true);
-    switchPage('settings', document.querySelectorAll('.nav-item')[7]);
-    return false;
-  }
-
-  const path = `data/${filename}`;
-  const content = JSON.stringify(data, null, 2);
-  const encoded = base64Encode(content);
-
-  /* 内部函数：获取最新 SHA */
-  const fetchSha = async () => {
-    const r = await fetch(
-      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}`,
-      { headers: { Authorization: `token ${token}` } }
-    );
-    if (r.ok) { return (await r.json()).sha; }
-    if (r.status === 404) { return null; }   // 新文件
-    throw new Error(`获取文件 SHA 失败：${r.status}`);
-  };
-
-  /* 内部函数：提交文件（最多重试 2 次） */
-  const doPut = async (sha, attempt) => {
-    const body = {
-      message: `Update ${filename} via admin panel`,
-      content: encoded,
-      branch: GH_BRANCH,
-    };
-    if (sha) body.sha = sha;
-
-    const r = await fetch(
-      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`,
-      {
-        method: 'PUT',
-        headers: {
-          Authorization: `token ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      }
-    );
-
-    if (!r.ok) {
-      const err = await r.json().catch(() => ({ message: `HTTP ${r.status}` }));
-      /* SHA 不匹配 → 重试一次（重新获取最新 SHA） */
-      if (err.message && err.message.includes('does not match') && attempt < 2) {
-        const freshSha = await fetchSha();
-        return doPut(freshSha, attempt + 1);
-      }
-      throw new Error(err.message || `提交失败：${r.status}`);
-    }
-    return true;
-  };
-
-  try {
-    const sha = await fetchSha();
-    await doPut(sha, 1);
-    if (showToastMsg) {
-      showToast(`✅ ${filename} 已保存到 GitHub，正在触发构建...`);
-      try { await triggerBuild(); } catch(e) {}
-    }
-    return true;
-  } catch (e) {
-    showToast(`❌ 保存失败：${e.message}`, true);
-    return false;
-  }
-}
 
 // ══ Toast ════════════════════════════════════════════════
 function showToast(msg, isError = false) {
@@ -1573,8 +1567,8 @@ function closeSidebarMobile() {
 }
 function processQueueNow() {
   // Manually trigger queue processing (called from mobile topbar)
-  if (window._saveQueue && window.window._saveQueue.length > 0) {
-    showToast('正在处理保存队列（' + window.window._saveQueue.length + ' 项）...');
+  if (window._saveQueue && window._saveQueue.length > 0) {
+    showToast('正在处理保存队列（' + window._saveQueue.length + ' 项）...');
   }
   // Queue auto-processes, this just gives feedback
   updateQueueUI();
