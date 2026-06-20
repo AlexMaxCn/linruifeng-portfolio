@@ -740,9 +740,12 @@
     .aurora {
       position: absolute;
       border-radius: 50%;
-      filter: blur(68px);
+      filter: blur(48px);
       will-change: transform;
-      opacity: 0.88;
+      opacity: 0.85;
+    }
+    @media (max-width: 768px) {
+      .aurora { filter: blur(32px); opacity: 0.72; }
     }
     .aurora-1 {
       width: 1200px; height: 950px;
@@ -1295,13 +1298,22 @@
 
     function initPage() {
 
-    // Scroll Reveal（一次性动画：进入视口后保持可见，解决手机端闪烁）
+    // Scroll Reveal（双向触发 + 防抖，解决手机地址栏闪烁）
+    const _revealTimers = new WeakMap();
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          observer.unobserve(entry.target); // 只触发一次，之后不再观察
-        }
+        const el = entry.target;
+        const isIn = entry.isIntersecting;
+        // 清除之前的定时器
+        if (_revealTimers.has(el)) clearTimeout(_revealTimers.get(el));
+        // 延迟 150ms 再执行，过滤地址栏引起的视口抖动
+        _revealTimers.set(el, setTimeout(() => {
+          if (isIn) {
+            el.classList.add('visible');
+          } else {
+            el.classList.remove('visible');
+          }
+        }, 150));
       });
     }, {
       threshold: 0.12,
