@@ -1295,20 +1295,17 @@
 
     function initPage() {
 
-    // Scroll Reveal（双端通用：进出都触发，小幅度Q弹飞入飞出）
+    // Scroll Reveal（一次性动画：进入视口后保持可见，解决手机端闪烁）
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          // 进入视口：加 visible，CSS 自动用 .reveal.visible 的 Q弹过渡
           entry.target.classList.add('visible');
-        } else {
-          // 离开视口：删 visible，CSS 自动用 .reveal 的平滑过渡
-          entry.target.classList.remove('visible');
+          observer.unobserve(entry.target); // 只触发一次，之后不再观察
         }
       });
     }, {
-      threshold: 0.1,
-      rootMargin: '0px 0px -8% 0px'
+      threshold: 0.12,
+      rootMargin: '0px 0px -5% 0px'
     });
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
