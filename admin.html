@@ -402,7 +402,24 @@
     .queue-log-item .q-filename { font-weight: 600; color: var(--text); flex: 1; }
     .queue-log-item .q-time { color: var(--muted); font-size: 12px; }
     .queue-log-item.err .q-filename { color: var(--danger); }
-</style>
+
+    /* ── Queue Status Badge ── */
+    #queue-status {
+      position: fixed; top: 14px; right: 14px; z-index: 100;
+      display: none; align-items: center; gap: 8px;
+      padding: 8px 14px; border-radius: 8px;
+      background: var(--surface); border: 1px solid var(--border);
+      font-size: 13px; color: var(--accent); font-weight: 600;
+      box-shadow: 0 4px 16px rgba(0,0,0,.3);
+    }
+    #queue-status.active { display: flex !important; }
+    #queue-status .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid var(--accent); border-top-color: transparent;
+      border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
 </head>
 <body>
   <div aria-hidden="true" style="position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 55% 45% at 15% 8%,rgba(13,148,136,.04) 0%,transparent 70%),radial-gradient(ellipse 45% 35% at 85% 92%,rgba(217,119,6,.03) 0%,transparent 70%);"></div>
@@ -686,9 +703,9 @@
 <div id="toast"></div>
 
 <!-- Queue Status -->
-<div id="queue-status">
+<div id="queue-status" style="display:none">
   <div class="spinner"></div>
-  <span id="queue-status-text">保存中...</span>
+  <span id="queue-status-text"></span>
 </div>
 
 <script>
@@ -748,11 +765,13 @@ async function processQueue() {
 function updateQueueUI() {
   const btn = document.getElementById('save-queue-btn');
   const badge = document.getElementById('queue-status');
+  const badgeText = document.getElementById('queue-status-text');
   if (!btn) return;
   if (window._saveQueue.length > 0 || window._saveQueueRunning) {
-    btn.textContent = window._saveQueueRunning ? `保存中... (${window._saveQueue.length})` : `保存队列 (${window._saveQueue.length})`;
+    btn.textContent = window._saveQueueRunning ? '保存中... (' + window._saveQueue.length + ')' : '保存队列 (' + window._saveQueue.length + ')';
     btn.classList.add('has-items');
-    if (badge) { badge.classList.add('active'); badge.textContent = window._saveQueueRunning ? '保存中...' : `排队中: ${window._saveQueue.length} 项`; }
+    if (badge) badge.classList.add('active');
+    if (badgeText) badgeText.textContent = window._saveQueueRunning ? '保存中...' : '排队中: ' + window._saveQueue.length + ' 项';
   } else {
     btn.classList.remove('has-items');
     if (badge) badge.classList.remove('active');
@@ -906,15 +925,17 @@ async function loadAll() {
       loadJSON('skills'), loadJSON('music'), loadJSON('education')
     ]);
     state = { profile, strengths, projects, skills, music, education };
-    renderDashboard();
-    renderProfileForm();
-    renderProjectsList();
-    renderSkillsList();
-    renderMusicList();
-    renderEduList();
   } catch(e) {
     showToast('数据加载失败: ' + e.message, true);
+    return;
   }
+  // Render each page with error isolation
+  try { renderDashboard(); } catch(e) { console.error('renderDashboard error:', e); }
+  try { renderProfileForm(); } catch(e) { console.error('renderProfileForm error:', e); showToast('个人信息表单渲染失败', true); }
+  try { renderProjectsList(); } catch(e) { console.error('renderProjectsList error:', e); }
+  try { renderSkillsList(); } catch(e) { console.error('renderSkillsList error:', e); }
+  try { renderMusicList(); } catch(e) { console.error('renderMusicList error:', e); }
+  try { renderEduList(); } catch(e) { console.error('renderEduList error:', e); }
 }
 
 // ══ GitHub Config ═══════════════════════════════════════
