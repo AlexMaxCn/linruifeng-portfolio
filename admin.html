@@ -325,6 +325,59 @@
       .field-row, .field-row.col3 { grid-template-columns: 1fr; }
       .impact-row { grid-template-columns: 1fr 1fr auto; }
     }
+
+    /* ── Mobile Topbar ── */
+    .mobile-topbar {
+      display: none;
+      position: sticky; top: 0; z-index: 20;
+      padding: 12px 16px;
+      background: rgba(15,19,24,.96); backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      align-items: center; justify-content: space-between;
+    }
+    .mobile-topbar .hamburger {
+      width: 40px; height: 40px; display: grid; place-items: center;
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); font-size: 20px; cursor: pointer;
+    }
+    .mobile-topbar .page-title-mobile { font-size: 16px; font-weight: 700; }
+    .mobile-topbar .save-queue-btn {
+      padding: 8px 14px; background: var(--accent); border: none;
+      border-radius: 8px; color: #fff; font-size: 13px; font-weight: 600;
+      cursor: pointer; display: none;
+    }
+    .mobile-topbar .save-queue-btn.has-items { display: inline-block; }
+
+    /* ── Sidebar Overlay (mobile) ── */
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; z-index: 90;
+      background: rgba(0,0,0,.55); backdrop-filter: blur(3px);
+    }
+    .sidebar-overlay.open { display: block; }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed; top: 0; left: 0; z-index: 100;
+        transform: translateX(-100%); transition: transform .3s ease;
+        width: 260px;
+      }
+      .sidebar.open { transform: translateX(0); }
+      .mobile-topbar { display: flex !important; }
+      .shell { flex-direction: column; }
+      .topbar { display: none; }
+      .page { padding: 20px 16px; }
+      .stats-grid { grid-template-columns: repeat(2,1fr); gap: 12px; }
+      .field-row, .field-row.col3 { grid-template-columns: 1fr; }
+      .impact-row { grid-template-columns: 1fr 1fr auto; }
+      /* Modal mobile: bottom sheet */
+      .modal-overlay { padding: 0; align-items: flex-end; }
+      .modal { max-width: 100%; max-height: 92vh; border-radius: 20px 20px 0 0; }
+      .modal-head { padding: 18px 20px 14px; }
+      .modal-body { padding: 18px 20px; }
+      .modal-foot { padding: 14px 20px; }
+      .modal-foot .btn-outline { order: 2; flex: 1; }
+      .modal-foot .btn-save { order: 1; flex: 2; }
+    }
   </style>
 </head>
 <body>
@@ -348,7 +401,16 @@
 
 <!-- ══ APP ════════════════════════════════════════════ -->
 <div id="app">
+  <!-- Mobile Topbar -->
+  <div class="mobile-topbar" id="mobile-topbar">
+    <button class="hamburger" onclick="toggleSidebar()">☰</button>
+    <span class="page-title-mobile" id="page-title-mobile">仪表盘</span>
+    <button class="save-queue-btn" id="save-queue-btn" onclick="processQueueNow()">保存队列 (0)</button>
+  </div>
+
   <div class="shell">
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-brand">
@@ -591,6 +653,12 @@
 <!-- Toast -->
 <div id="toast"></div>
 
+<!-- Queue Status -->
+<div id="queue-status">
+  <div class="spinner"></div>
+  <span id="queue-status-text">保存中...</span>
+</div>
+
 <script>
 // ══ Config ══════════════════════════════════════════════
 const DEFAULT_PWD = '3221202923Lyf';
@@ -602,6 +670,114 @@ const DATA_FILES = {
   music: 'data/music.json',
   education: 'data/education.json',
 };
+
+
+// ══ Save Queue System ═════════════════════════════════
+window._saveQueue = [];
+window.window._saveQueueRunning = false;
+window.window._buildDebounceTimer = null;
+
+function enqueueSave(filename, data, showToastMsg) {
+  return new Promise((resolve, reject) => {
+    window._saveQueue.push({ filename, data, showToastMsg, resolve, reject });
+    updateQueueUI();
+    if (!window._saveQueueRunning) processQueue();
+  });
+}
+
+async function processQueue() {
+  if (window._saveQueue.length === 0) { window._saveQueueRunning = false; updateQueueUI(); return; }
+  window._saveQueueRunning = true;
+  updateQueueUI();
+  const { filename, data, showToastMsg, resolve, reject } = window._saveQueue.shift();
+  try {
+    const result = await _doSaveToGitHub(filename, data, showToastMsg);
+    resolve(result);
+  } catch(e) {
+    reject(e);
+  }
+  // Debounce build trigger: wait 2s after last save, then trigger once
+  clearTimeout(window._buildDebounceTimer);
+  window._buildDebounceTimer = setTimeout(() => {
+    triggerBuildSilent();
+  }, 2000);
+  processQueue();
+}
+
+function updateQueueUI() {
+  const btn = document.getElementById('save-queue-btn');
+  const badge = document.getElementById('queue-status');
+  if (!btn) return;
+  if (window._saveQueue.length > 0 || window._saveQueueRunning) {
+    btn.textContent = window._saveQueueRunning ? `保存中... (${window._saveQueue.length})` : `保存队列 (${window._saveQueue.length})`;
+    btn.classList.add('has-items');
+    if (badge) { badge.classList.add('active'); badge.textContent = window._saveQueueRunning ? '保存中...' : `排队中: ${window._saveQueue.length} 项`; }
+  } else {
+    btn.classList.remove('has-items');
+    if (badge) badge.classList.remove('active');
+  }
+}
+
+async function triggerBuildSilent() {
+  const token = getToken();
+  if (!token) return;
+  try {
+    const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/pages/builds`, {
+      method: 'POST', headers: { Authorization: `token ${token}` }
+    });
+  } catch(e) {}
+}
+
+// ══ Replaced saveToGitHub (now just enqueues) ══
+async function saveToGitHub(filename, data, showToastMsg) {
+  return enqueueSave(filename, data, showToastMsg);
+}
+
+// ══ Actual GitHub save (internal) ════════════════════
+async function _doSaveToGitHub(filename, data, showToastMsg) {
+  const token = getToken();
+  if (!token) {
+    showToast('请先在「系统设置」中配置 GitHub Token', true);
+    switchPage('settings', document.querySelectorAll('.nav-item')[7]);
+    return false;
+  }
+  const path = `data/${filename}`;
+  const content = JSON.stringify(data, null, 2);
+  const encoded = base64Encode(content);
+
+  const fetchSha = async () => {
+    const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}`, {
+      headers: { Authorization: `token ${token}` }
+    });
+    if (r.ok) return (await r.json()).sha;
+    if (r.status === 404) return null;
+    throw new Error(`获取文件 SHA 失败: ${r.status}`);
+  };
+
+  const doPut = async (sha, attempt) => {
+    const body = { message: `Update ${filename} via admin panel`, content: encoded, branch: GH_BRANCH };
+    if (sha) body.sha = sha;
+    const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, {
+      method: 'PUT',
+      headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({ message: `HTTP ${r.status}` }));
+      if (err.message && err.message.includes('does not match') && attempt < 3) {
+        const freshSha = await fetchSha();
+        return doPut(freshSha, attempt + 1);
+      }
+      throw new Error(err.message || `提交失败: ${r.status}`);
+    }
+  };
+
+  const sha = await fetchSha();
+  await doPut(sha, 1);
+  if (showToastMsg) showToast(`✅ ${filename} 已保存`);
+  return true;
+}
+
 
 // ══ State ════════════════════════════════════════════════
 let state = { profile: null, strengths: [], projects: [], skills: [], music: [], education: [] };
@@ -639,6 +815,11 @@ function switchPage(id, btn) {
   document.getElementById('page-' + id).classList.add('active');
   if (btn) btn.classList.add('active');
   document.getElementById('page-title').textContent = pageTitles[id] || id;
+  // Also update mobile topbar title
+  const mobTitle = document.getElementById('page-title-mobile');
+  if (mobTitle) mobTitle.textContent = pageTitles[id] || id;
+  // Close sidebar on mobile after navigation
+  closeSidebarMobile();
 }
 
 // ══ Data Loading ═════════════════════════════════════════
@@ -1073,7 +1254,6 @@ function collectStrengths() {
 }
 
 async function saveProfile() {
-  // Collect form values
   collectHeroStats();
   collectStrengths();
   state.profile.name = document.getElementById('p-name').value;
@@ -1091,12 +1271,9 @@ async function saveProfile() {
   state.profile.cta_title = document.getElementById('p-cta-title').value;
   state.profile.cta_desc = document.getElementById('p-cta-desc').value;
   state.profile.music_section_lead = document.getElementById('p-music-lead').value;
-  const r1 = await saveToGitHub('profile.json', state.profile, false);
-  const r2 = await saveToGitHub('strengths.json', state.strengths, false);
-  if (r1 && r2) {
-    showToast('✅ 个人信息已保存，正在触发构建...');
-    try { await triggerBuild(); } catch(e) {}
-  } else showToast('❌ 部分文件保存失败，请检查 Token 权限', true);
+  await saveToGitHub('profile.json', state.profile, false);
+  await saveToGitHub('strengths.json', state.strengths, false);
+  showToast('✅ 个人信息已保存，构建将在 2 秒内自动触发');
 }
 
 // ══ Projects ═════════════════════════════════════════════
@@ -1379,6 +1556,34 @@ function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModal();
 });
+
+// ══ Mobile Nav ══════════════════════════════════
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sidebar-overlay');
+  const isOpen = sb.classList.contains('open');
+  sb.classList.toggle('open');
+  ov.classList.toggle('open');
+  document.body.style.overflow = isOpen ? '' : 'hidden';
+}
+function closeSidebarMobile() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function processQueueNow() {
+  // Manually trigger queue processing (called from mobile topbar)
+  if (window._saveQueue && window.window._saveQueue.length > 0) {
+    showToast('正在处理保存队列（' + window.window._saveQueue.length + ' 项）...');
+  }
+  // Queue auto-processes, this just gives feedback
+  updateQueueUI();
+}
+// Update mobile page title when switching pages
+const _orig_switchPage = switchPage;
+// (switchPage is redefined below to also update mobile title)
+
+
 </script>
 </body>
 </html>
