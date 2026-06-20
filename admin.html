@@ -1677,7 +1677,12 @@ function moveMusicUp(i) {
   state.music[i-1] = state.music[i];
   state.music[i] = tmp;
   renderMusicList();
-  document.getElementById('save-sort-btn').classList.remove('hidden');
+  var btn = document.getElementById('save-sort-btn');
+  if (btn) {
+    btn.classList.remove('hidden');
+    btn.style.display = 'inline-flex';
+    console.log('[sort] moved up, save button shown');
+  }
 }
 function moveMusicDown(i) {
   if (i >= state.music.length - 1) return;
@@ -1685,7 +1690,12 @@ function moveMusicDown(i) {
   state.music[i+1] = state.music[i];
   state.music[i] = tmp;
   renderMusicList();
-  document.getElementById('save-sort-btn').classList.remove('hidden');
+  var btn = document.getElementById('save-sort-btn');
+  if (btn) {
+    btn.classList.remove('hidden');
+    btn.style.display = 'inline-flex';
+    console.log('[sort] moved down, save button shown');
+  }
 }
 async function saveMusicSort() {
   var btn = document.getElementById('save-sort-btn');
@@ -1694,7 +1704,9 @@ async function saveMusicSort() {
   btn.textContent = '✅ 已保存';
   setTimeout(function() {
     btn.classList.add('hidden');
+    btn.style.display = '';
     btn.textContent = '💾 保存排序';
+    console.log('[sort] sort saved');
   }, 2000);
 }
 function musicModalHTML(m) {
