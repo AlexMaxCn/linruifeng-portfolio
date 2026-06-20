@@ -58,5 +58,17 @@
     "producer": "林锐锋",
     "file": "audio/Drowsy coffee.mp3",
     "featured": true
+  },
+  {
+    "id": 1781943211220,
+    "cover": "images/d09ba361537b4fc06c1d35093e45bdc8.png",
+    "title": "FM.20",
+    "description": "另类摇滚",
+    "composer": "林锐锋",
+    "lyricist": "林锐锋",
+    "arranger": "林锐锋",
+    "producer": "林锐锋",
+    "file": "audio/FM.20.mp3",
+    "featured": true
   }
 ]
