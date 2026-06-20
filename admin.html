@@ -454,7 +454,7 @@
     <!-- Sidebar Overlay (mobile) -->
     <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
     <!-- Sidebar -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand">
         <div class="mark">林</div>
         <span>管理后台</span>
@@ -1590,8 +1590,10 @@ function toggleSidebar() {
   document.body.style.overflow = isOpen ? '' : 'hidden';
 }
 function closeSidebarMobile() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sidebar-overlay').classList.remove('open');
+  var sb = document.getElementById('sidebar');
+  var ov = document.getElementById('sidebar-overlay');
+  if (sb) sb.classList.remove('open');
+  if (ov) ov.classList.remove('open');
   document.body.style.overflow = '';
 }
 function processQueueNow() {
