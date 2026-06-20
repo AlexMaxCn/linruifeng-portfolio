@@ -283,7 +283,33 @@
       background: var(--accent); transition: width .3s ease;
     }
 
-    /* ── Bullet list editor ── */
+    /* ── Image Upload Field ── */
+    .img-upload-field { display: flex; gap: 8px; align-items: stretch; }
+    .img-upload-field input[type="text"] { flex: 1; }
+    .btn-upload-img {
+      display: flex; align-items: center; gap: 6px;
+      padding: 0 14px; border: 1px solid var(--border);
+      border-radius: 7px; background: var(--surface2);
+      color: var(--text); font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all .2s; white-space: nowrap; flex-shrink: 0;
+    }
+    .btn-upload-img:hover { border-color: var(--accent); background: rgba(13,148,136,.08); color: var(--accent); }
+    .btn-upload-img.uploading { border-color: var(--accent-2); pointer-events: none; opacity: .7; }
+    .btn-upload-img svg { flex-shrink: 0; }
+    .img-preview {
+      margin-top: 10px; border-radius: 8px; overflow: hidden;
+      border: 1px solid var(--border); background: var(--surface2);
+      max-width: 200px; display: none; position: relative;
+    }
+    .img-preview.has-img { display: block; }
+    .img-preview img { display: block; width: 100%; height: auto; }
+    .img-preview-square { width: 120px; }
+    .img-preview-square img { aspect-ratio: 1; object-fit: cover; }
+    .img-upload-status { font-size: 12px; margin-top: 6px; color: var(--muted); }
+    .img-upload-status.error { color: var(--danger); }
+    .img-upload-status.success { color: var(--success); }
+
+    /* ── Bullet list editor ──
     .bullets-list { display: grid; gap: 8px; margin-bottom: 8px; }
     .bullet-row { display: flex; gap: 8px; align-items: center; }
     .bullet-input {
@@ -556,7 +582,17 @@
           </div>
           <div class="field-row">
             <div class="field"><label>学校专业</label><input id="p-school" type="text"></div>
-            <div class="field"><label>证件照路径</label><input id="p-photo" type="text" placeholder="证件照/xxx.jpg"></div>
+            <div class="field">
+              <label>证件照</label>
+              <div class="img-upload-field">
+                <input id="p-photo" type="text" placeholder="images/xxx.jpg" oninput="updateImgPreview('p-photo','p-photo-preview')">
+                <button type="button" class="btn-upload-img" onclick="document.getElementById('p-photo-input').click()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> 上传图片
+                </button>
+                <input type="file" id="p-photo-input" accept="image/*" style="display:none" onchange="handleImageUpload(this, 'p-photo', 'p-photo-preview', 'images/')">
+              </div>
+              <div class="img-preview img-preview-square" id="p-photo-preview"></div>
+            </div>
           </div>
           <div class="field">
             <label>职业标题（Hero 副标题）</label>
@@ -1108,6 +1144,164 @@ async function uploadAudioFile(file, onProgress) {
   return filePath;
 }
 
+// ══ Generic Image Upload (GitHub Contents API → images/ dir) ════════
+async function uploadImageFile(file, targetDir, onProgress) {
+  const token = getToken();
+  if (!token) {
+    showToast('请先在「系统设置」中配置 GitHub Token', true);
+    switchPage('settings', document.querySelectorAll('.nav-item')[7]);
+    return null;
+  }
+
+  // Image size check (10MB limit for images)
+  const maxSize = 10 * 1024 * 1024;
+  if (file.size > maxSize) {
+    showToast('图片超过 10MB 限制，请压缩后再上传', true);
+    return null;
+  }
+
+  if (onProgress) onProgress(10);
+
+  // Convert to base64
+  const arrayBuffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(arrayBuffer);
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode.apply(null, chunk);
+    if (onProgress) onProgress(10 + Math.min(i / bytes.length * 50, 50));
+  }
+  const base64 = btoa(binary);
+
+  // Sanitize filename: keep only ASCII-safe + common CJK (GitHub API handles UTF-8, but be safe)
+  const safeName = file.name.replace(/[^\w.\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff()-]/g, '_');
+  const filePath = (targetDir || 'images/') + safeName;
+
+  if (onProgress) onProgress(70);
+
+  // Get SHA if file already exists
+  let sha = null;
+  try {
+    const r = await fetch(
+      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${filePath}?ref=${GH_BRANCH}`,
+      { headers: { Authorization: `token ${token}` } }
+    );
+    if (r.ok) sha = (await r.json()).sha;
+  } catch(e) {}
+
+  if (onProgress) onProgress(80);
+
+  const body = {
+    message: `Upload image: ${safeName}`,
+    content: base64,
+    branch: GH_BRANCH,
+  };
+  if (sha) body.sha = sha;
+
+  const r = await fetch(
+    `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${filePath}`,
+    {
+      method: 'PUT',
+      headers: {
+        Authorization: `token ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    }
+  );
+
+  if (onProgress) onProgress(100);
+
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({ message: `HTTP ${r.status}` }));
+    throw new Error(err.message || `上传失败：${r.status}`);
+  }
+
+  return filePath;
+}
+
+// ══ Handle Image Upload (generic: works for profile photo + music cover) ══
+async function handleImageUpload(input, targetInputId, previewId, targetDir) {
+  const file = input.files[0];
+  if (!file) return;
+
+  // Validate it's an image
+  if (!file.type.startsWith('image/')) {
+    showToast('请选择图片文件（JPG/PNG/WebP 等）', true);
+    input.value = '';
+    return;
+  }
+
+  const targetInput = document.getElementById(targetInputId);
+  const preview = document.getElementById(previewId);
+  const sizeKB = (file.size / 1024).toFixed(0);
+
+  // Find the upload button associated with this field to show uploading state
+  const field = input.closest('.field');
+  const btn = field ? field.querySelector('.btn-upload-img') : null;
+  if (btn) btn.classList.add('uploading');
+  if (btn) btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 上传中...';
+
+  // Show local preview immediately
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    if (preview) {
+      preview.innerHTML = '<img src="' + e.target.result + '" alt="预览">';
+      preview.classList.add('has-img');
+    }
+  };
+  reader.readAsDataURL(file);
+
+  try {
+    const dir = targetDir || 'images/';
+    const filePath = await uploadImageFile(file, dir, null);
+
+    if (filePath) {
+      targetInput.value = filePath;
+      // Update preview with the actual uploaded path
+      if (preview) {
+        const baseUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/`;
+        preview.innerHTML = '<img src="' + baseUrl + filePath + '?v=' + Date.now() + '" alt="预览">';
+        preview.classList.add('has-img');
+      }
+      showToast('✅ 图片上传成功：' + filePath);
+    }
+  } catch (err) {
+    showToast('图片上传失败：' + err.message, true);
+    if (preview) {
+      preview.classList.remove('has-img');
+      preview.innerHTML = '';
+    }
+  } finally {
+    if (btn) {
+      btn.classList.remove('uploading');
+      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> 上传图片';
+    }
+    input.value = '';
+  }
+}
+
+// ══ Update image preview from text input value ══
+function updateImgPreview(inputId, previewId) {
+  const input = document.getElementById(inputId);
+  const preview = document.getElementById(previewId);
+  if (!input || !preview) return;
+  const val = input.value.trim();
+  if (val) {
+    let src = val;
+    // If it's a relative path, prepend the raw GitHub URL
+    if (!val.startsWith('http') && !val.startsWith('data:')) {
+      src = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/` + val;
+    }
+    preview.innerHTML = '<img src="' + src + '" alt="预览" onerror="this.parentElement.classList.remove(\'has-img\');this.parentElement.innerHTML=\'\'">';
+    preview.classList.add('has-img');
+  } else {
+    preview.classList.remove('has-img');
+    preview.innerHTML = '';
+  }
+}
+
 // ══ Handle Audio File Selection (in modal) ════════════════
 async function handleAudioUpload(input) {
   const file = input.files[0];
@@ -1189,6 +1383,14 @@ function openModal(title, bodyHTML, saveCb) {
   modalSaveCallback = saveCb;
   document.getElementById('modal-save-btn').onclick = () => { saveCb(); };
   document.getElementById('modal-overlay').classList.add('open');
+  // Trigger image previews for any image upload fields in the modal
+  setTimeout(() => {
+    document.querySelectorAll('#modal-body .img-preview').forEach(pv => {
+      const inputId = pv.id.replace('-preview', '');
+      const inp = document.getElementById(inputId);
+      if (inp && inp.value.trim()) updateImgPreview(inputId, pv.id);
+    });
+  }, 50);
 }
 function closeModal(e) {
   if (e && e.target !== document.getElementById('modal-overlay')) return;
@@ -1215,6 +1417,7 @@ function renderProfileForm() {
   document.getElementById('p-age').value = p.age || '';
   document.getElementById('p-school').value = p.school || '';
   document.getElementById('p-photo').value = p.photo || '';
+  updateImgPreview('p-photo', 'p-photo-preview');
   document.getElementById('p-title').value = p.title || '';
   document.getElementById('p-hero-copy').value = p.hero_copy || '';
   document.getElementById('p-direction').value = p.direction || '';
@@ -1486,7 +1689,17 @@ function musicModalHTML(m) {
       <div class="field"><label>编曲</label><input id="mu-arranger" type="text" value="${esc(m.arranger||'')}"></div>
       <div class="field"><label>制作人</label><input id="mu-producer" type="text" value="${esc(m.producer||'')}"></div>
     </div>
-    <div class="field"><label>封面图 URL（可选）</label><input id="mu-cover" type="text" value="${esc(m.cover||'')}" placeholder="https://..."></div>
+    <div class="field">
+      <label>封面图</label>
+      <div class="img-upload-field">
+        <input id="mu-cover" type="text" value="${esc(m.cover||'')}" placeholder="images/xxx.jpg" oninput="updateImgPreview('mu-cover','mu-cover-preview')">
+        <button type="button" class="btn-upload-img" onclick="document.getElementById('mu-cover-input').click()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> 上传图片
+        </button>
+        <input type="file" id="mu-cover-input" accept="image/*" style="display:none" onchange="handleImageUpload(this, 'mu-cover', 'mu-cover-preview', 'images/')">
+      </div>
+      <div class="img-preview img-preview-square" id="mu-cover-preview"></div>
+    </div>
     <div class="field">
       <label>音频文件路径</label>
       <input id="mu-file" type="text" value="${esc(m.file||'')}" placeholder="audio/歌曲名.mp3">

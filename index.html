@@ -686,9 +686,33 @@
       border: 1px solid rgba(255,255,255,0.08);
       transition: all 0.35s var(--ease);
     }
-    .track-card:hover { background: rgba(255,255,255,0.1); border-color: rgba(13,148,136,0.25); }
+    .track-card { background: rgba(255,255,255,0.1); border-color: rgba(13,148,136,0.25); }
     .track-card h3 { font-size: 20px; margin-bottom: 4px; }
     .track-meta { font-size: 13px; color: rgba(255,255,255,0.35); margin-bottom: 20px; }
+
+    /* Album Cover */
+    .track-cover {
+      position: relative; width: 100%; aspect-ratio: 1 / 1;
+      border-radius: 14px; overflow: hidden; margin-bottom: 20px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    .track-cover img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      transition: transform 0.6s var(--ease);
+    }
+    .track-card:hover .track-cover img { transform: scale(1.04); }
+    .track-cover-placeholder {
+      width: 100%; height: 100%; display: grid; place-items: center;
+      background: linear-gradient(135deg, rgba(13,148,136,0.12), rgba(10,10,18,0.4));
+    }
+    .track-cover-placeholder svg {
+      width: 40px; height: 40px; opacity: 0.25; color: var(--teal);
+    }
+    /* Vinyl spin animation when playing */
+    .track-card.playing .track-cover img { animation: cover-pulse 2s ease-in-out infinite; }
+    @keyframes cover-pulse { 0%,100% { transform: scale(1.04); } 50% { transform: scale(1.06); } }
 
     /* Custom Audio Player */
     .audio-player {
@@ -908,6 +932,7 @@
 
     @media (prefers-reduced-motion: reduce) {
       .aurora { animation: none !important; }
+      .track-card.playing .track-cover img { animation: none !important; }
     }
 
   </style>
@@ -1181,6 +1206,7 @@
       <p class="section-lead reveal d2" id="music-lead-text">使用专业 DAW 与 AI 辅助创作结合，作品发布于网易云音乐。</p>
       <div class="music-grid" id="music-grid">
         <article class="track-card reveal" data-track="1">
+          <div class="track-cover"><div class="track-cover-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg></div></div>
           <h3>Midnight Masquerade</h3>
           <p class="track-meta">电子音乐 · 编曲 / 混音</p>
           <div class="audio-player" data-src="audio/Midnight_Masquerade.mp3">
@@ -1196,6 +1222,7 @@
           </div>
         </article>
         <article class="track-card reveal d1" data-track="2">
+          <div class="track-cover"><div class="track-cover-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg></div></div>
           <h3>Chilling</h3>
           <p class="track-meta">AI辅助创作 · 编曲 / 混音</p>
           <div class="audio-player" data-src="audio/Chilling.mp3">
@@ -1390,7 +1417,11 @@
         musicGrid.innerHTML = data.music.map(function(m, i) {
           var delay = i > 0 ? ' d' + i : '';
           var meta = [m.description || m.desc || '', m.arranger ? '\u7f16\u66f2 / \u6df7\u97f3' : ''].filter(Boolean).join(' \u00b7 ');
-          return '<article class="track-card reveal' + delay + '" data-track="' + m.id + '"><h3>' + m.title + '</h3><p class="track-meta">' + meta + '</p><div class="audio-player" data-src="' + m.file + '"><button class="play-btn" aria-label="\u64ad\u653e">' + SVG_PLAY_BTN + SVG_PAUSE_BTN + '</button><div class="track-info"><div class="track-name">' + m.title + '</div><div class="time-display">0:00 / 0:00</div></div><div class="progress-wrap"><div class="progress-track"><div class="progress-fill"></div><div class="progress-thumb" style="left:0%"></div></div></div><a class="dl-btn" href="' + m.file + '" download title="\u4e0b\u8f7d">\u2193</a></div></article>';
+          var coverSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>';
+          var coverHtml = m.cover
+            ? '<div class="track-cover"><img src="' + m.cover + '" alt="' + m.title + ' \u4e13\u8f91\u5c01\u9762" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'"><div class="track-cover-placeholder" style="display:none">' + coverSvg + '</div></div>'
+            : '<div class="track-cover"><div class="track-cover-placeholder">' + coverSvg + '</div></div>';
+          return '<article class="track-card reveal' + delay + '" data-track="' + m.id + '">' + coverHtml + '<h3>' + m.title + '</h3><p class="track-meta">' + meta + '</p><div class="audio-player" data-src="' + m.file + '"><button class="play-btn" aria-label="\u64ad\u653e">' + SVG_PLAY_BTN + SVG_PAUSE_BTN + '</button><div class="track-info"><div class="track-name">' + m.title + '</div><div class="time-display">0:00 / 0:00</div></div><div class="progress-wrap"><div class="progress-track"><div class="progress-fill"></div><div class="progress-thumb" style="left:0%"></div></div></div><a class="dl-btn" href="' + m.file + '" download title="\u4e0b\u8f7d">\u2193</a></div></article>';
         }).join('');
       }
 
@@ -1488,6 +1519,7 @@
       const thumb = player.querySelector('.progress-thumb');
       const timeEl = player.querySelector('.time-display');
       const wrap = player.querySelector('.progress-wrap');
+      const card = player.closest('.track-card');
       const src = player.dataset.src;
       const trackName = player.querySelector('.track-name').textContent;
       const sp = window.__sharedPlayer;
@@ -1495,7 +1527,8 @@
       const fmt = s => { if (!s || isNaN(s)) return '0:00'; const m = Math.floor(s/60), sec = Math.floor(s%60); return m+':'+String(sec).padStart(2,'0'); };
       sp.registerUI((player, event) => {
         if (!player.currentTrack || player.currentTrack.src !== src) {
-          fill.style.width='0%'; thumb.style.left='0%'; btn.classList.remove('playing'); timeEl.textContent='0:00 / 0:00'; return;
+          fill.style.width='0%'; thumb.style.left='0%'; btn.classList.remove('playing'); timeEl.textContent='0:00 / 0:00';
+          card.classList.remove('playing'); return;
         }
         if (player.audio.duration) {
           const pct = (player.audio.currentTime / player.audio.duration) * 100;
@@ -1505,6 +1538,7 @@
           timeEl.textContent = fmt(player.audio.currentTime) + ' / ' + fmt(player.audio.duration);
         }
         btn.classList.toggle('playing', player.isPlaying);
+        card.classList.toggle('playing', player.isPlaying);
       });
       btn.addEventListener('click', () => {
         const track = { name: trackName, src: src };
