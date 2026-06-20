@@ -51,12 +51,12 @@
     "id": 1781942248789,
     "cover": "images/c8247b024a8b465cf94fa50c8712d1b2.jpg",
     "title": "Drowsy coffee",
-    "description": "",
-    "composer": "",
-    "lyricist": "",
-    "arranger": "",
-    "producer": "",
+    "description": "轻松慵懒",
+    "composer": "林锐锋",
+    "lyricist": "林锐锋",
+    "arranger": "林锐锋",
+    "producer": "林锐锋",
     "file": "audio/Drowsy coffee.mp3",
-    "featured": false
+    "featured": true
   }
 ]
