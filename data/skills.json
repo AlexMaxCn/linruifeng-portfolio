@@ -2,21 +2,42 @@
   {
     "category": "音频制作",
     "desc": "录音、混音、编曲",
-    "items": ["Logic Pro", "Pro Tools", "Cubase", "Studio One"]
+    "items": [
+      "Logic Pro",
+      "Cubase",
+      "Studio One"
+    ]
   },
   {
     "category": "现场扩声",
     "desc": "数字调音台与信号处理",
-    "items": ["Behringer X32", "Midas M32", "Dante 网络", "SIEM 监听"]
+    "items": [
+      "Behringer X32",
+      "Midas M32",
+      "Dante 网络",
+      "SIEM 监听"
+    ]
   },
   {
     "category": "视频编辑",
     "desc": "剪辑、调色与特效",
-    "items": ["Premiere Pro", "Final Cut Pro", "DaVinci Resolve", "Fusion", "剪映Pro"]
+    "items": [
+      "Premiere Pro",
+      "Final Cut Pro",
+      "DaVinci Resolve",
+      "Fusion",
+      "剪映Pro"
+    ]
   },
   {
     "category": "图像与设计",
     "desc": "修图、排版与CAD绘图",
-    "items": ["Photoshop", "Illustrator", "CorelDRAW", "Auto CAD", "Lightroom"]
+    "items": [
+      "Photoshop",
+      "Illustrator",
+      "CorelDRAW",
+      "Auto CAD",
+      "Lightroom"
+    ]
   }
 ]
