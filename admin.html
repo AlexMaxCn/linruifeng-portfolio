@@ -445,6 +445,7 @@
       border-radius: 50%; animation: spin .7s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
@@ -1646,13 +1647,20 @@ async function deleteSkill(i) {
 
 // ══ Music ════════════════════════════════════════════════
 function renderMusicList() {
-  document.getElementById('music-list').innerHTML = state.music.map((m,i) => `
+  var list = state.music;
+  document.getElementById('music-list').innerHTML = list.map((m,i) => `
     <div class="list-item">
       <div class="list-item-body">
         <div class="list-item-title">🎵 ${esc(m.title)} ${m.featured ? '<span class="badge featured">精选</span>' : ''}</div>
         <div class="list-item-sub">${esc(m.description || m.desc || '')} · <code style="font-size:12px">${esc(m.file)}</code></div>
       </div>
       <div class="list-item-actions">
+        <button class="btn-icon ${i===0?'hidden':''}" onclick="moveMusicUp(${i})" title="上移">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+        </button>
+        <button class="btn-icon ${i===list.length-1?'hidden':''}" onclick="moveMusicDown(${i})" title="下移">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
         <button class="btn-icon" onclick="editMusic(${i})" title="编辑">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
@@ -1661,6 +1669,20 @@ function renderMusicList() {
         </button>
       </div>
     </div>`).join('') || '<p style="color:var(--muted);padding:12px">暂无音乐作品</p>';
+}
+function moveMusicUp(i) {
+  if (i <= 0) return;
+  var tmp = state.music[i-1];
+  state.music[i-1] = state.music[i];
+  state.music[i] = tmp;
+  renderMusicList();
+}
+function moveMusicDown(i) {
+  if (i >= state.music.length - 1) return;
+  var tmp = state.music[i+1];
+  state.music[i+1] = state.music[i];
+  state.music[i] = tmp;
+  renderMusicList();
 }
 function musicModalHTML(m) {
   return `
